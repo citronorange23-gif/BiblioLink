@@ -21,6 +21,11 @@ type Book = {
   status: string;
 };
 
+export function generateStaticParams() {
+  // Nécessaire pour l'export statique Next.js + Capacitor
+  return [{ id: "placeholder" }];
+}
+
 export default function EditBookPage() {
   const params = useParams();
   const router = useRouter();
