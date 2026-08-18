@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(50)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String
+  avatarUrl    String?
+  bio          String?
+  neighborhood String?
+  latitude     Float?   // <--- Ajouté
+  longitude    Float?   // <--- Ajouté
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  books         Book[]
+  favorites     Favorite[]
+  messages      Message[]
+  notifications Notification[]
+
+  conversationAsA Conversation[] @relation("ConversationUserA")
+  conversationAsB Conversation[] @relation("ConversationUserB")
+}
+
+model Book {
+  id            String   @id @default(uuid())
+  ownerId       String
+  isbn          String?  @db.VarChar(20)
+  title         String   @db.VarChar(255)
+  author        String?  @db.VarChar(255)
+  theme         String?  @db.VarChar(100)
+  coverImageUrl String?
+  description   String?
+  condition     String   @default("good")
+  status        String   @default("available")
+  createdAt     DateTime @default(now())
+
+  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  favorites     Favorite[]
+  conversations Conversation[]
+
+  @@index([ownerId])
+  @@index([isbn])
+  @@index([status])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  bookId    String
+  createdAt DateTime @default(now())
+
+  deletedByAAt DateTime?
+  deletedByBAt DateTime?
+
+  userA User @relation("ConversationUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("ConversationUserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  book          Book           @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  notifications Notification[]
+
+  @@index([userAId])
+  @@index([userBId])
+  @@index([bookId])
+}
+
+model Message {
+  id             String    @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           String    @default("USER")
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+}
+
+model Notification {
+  id             String    @id @default(uuid())
+  userId         String
+  conversationId String
+  type           String    @db.VarChar(50)
+  title          String    @db.VarChar(255)
+  message        String
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@index([conversationId])
+}
