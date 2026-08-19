@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_js_1 = require("../middleware/auth.middleware.js");
+const conversations_controller_js_1 = require("../controllers/conversations.controller.js");
+const router = (0, express_1.Router)();
+router.post("/", auth_middleware_js_1.requireAuth, conversations_controller_js_1.startConversation);
+router.get("/", auth_middleware_js_1.requireAuth, conversations_controller_js_1.getConversations);
+router.delete("/:id", auth_middleware_js_1.requireAuth, conversations_controller_js_1.deleteConversation);
+router.get("/:id", auth_middleware_js_1.requireAuth, conversations_controller_js_1.getConversation);
+router.post("/:id/messages", auth_middleware_js_1.requireAuth, conversations_controller_js_1.sendMessage);
+router.post("/:id/finalize", auth_middleware_js_1.requireAuth, conversations_controller_js_1.finalizeBorrow);
+router.post("/:id/return", auth_middleware_js_1.requireAuth, conversations_controller_js_1.returnBook);
+exports.default = router;
