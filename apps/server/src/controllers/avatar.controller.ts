@@ -98,7 +98,10 @@ export async function uploadAvatar(
     console.error("AVATAR UPLOAD ERROR:", error);
 
     return res.status(500).json({
-      error: "Failed to upload avatar",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to upload avatar",
     });
   }
 }
