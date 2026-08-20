@@ -23,7 +23,8 @@ const Popup = dynamic(
 
 import "leaflet/dist/leaflet.css";
 
-const API_URL = "http://localhost:4000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 type Owner = {
   id: string;

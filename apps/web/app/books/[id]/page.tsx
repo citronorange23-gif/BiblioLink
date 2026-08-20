@@ -3,7 +3,8 @@ import BorrowButton from "./BorrowButton";
 import FavoriteButton from "./FavoriteButton";
 import BookCover from "@/components/BookCover";
 
-const API_URL = "http://localhost:4000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 type Book = {
   id: string;

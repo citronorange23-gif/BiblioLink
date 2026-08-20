@@ -4,7 +4,8 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import FinalizeBorrowButton from "./FinalizeBorrowButton";
 import Link from "next/link";
 
-const API_URL = "http://localhost:4000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 type Message = {
   id: string;
