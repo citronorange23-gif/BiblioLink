@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const API_URL = "http://localhost:4000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function Navbar() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -168,20 +169,20 @@ export default function Navbar() {
             </Link>
           )}
 
-          <Link
-            href="/conversations"
-            className="flex items-center gap-2 text-gray-600 hover:text-black"
-          >
-            Messages
+          {userId && (
+            <Link
+              href="/conversations"
+              className="flex items-center gap-2 text-gray-600 hover:text-black"
+            >
+              Messages
 
-            {unreadCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                {unreadCount > 99
-                  ? "99+"
-                  : unreadCount}
-              </span>
-            )}
-          </Link>
+              {unreadCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {userId ? (
             <Link
