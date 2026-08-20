@@ -1,7 +1,6 @@
 import { Response } from "express";
 import { fileTypeFromBuffer } from "file-type";
-import { promises as fs } from "fs";
-import path from "path";
+import { put } from "@vercel/blob";
 import crypto from "crypto";
 
 import { AuthRequest } from "../middleware/auth.middleware.js";
@@ -50,30 +49,17 @@ export async function uploadBookCover(
     const filename =
       `${crypto.randomUUID()}.${extension}`;
 
-    const uploadDirectory = path.resolve(
-      "uploads",
-      "covers"
+    const blob = await put(
+      `covers/${filename}`,
+      req.file.buffer,
+      {
+        access: "public",
+        contentType: detectedType.mime,
+      }
     );
-
-    await fs.mkdir(uploadDirectory, {
-      recursive: true,
-    });
-
-    const filePath = path.join(
-      uploadDirectory,
-      filename
-    );
-
-    await fs.writeFile(
-      filePath,
-      req.file.buffer
-    );
-
-    const coverImageUrl =
-      `/uploads/covers/${filename}`;
 
     return res.status(201).json({
-      coverImageUrl,
+      coverImageUrl: blob.url,
     });
   } catch (error) {
     console.error(
@@ -82,7 +68,10 @@ export async function uploadBookCover(
     );
 
     return res.status(500).json({
-      error: "Failed to upload book cover",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to upload book cover",
     });
   }
 }

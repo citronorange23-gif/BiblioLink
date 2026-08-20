@@ -1,7 +1,6 @@
 import { Response } from "express";
 import { fileTypeFromBuffer } from "file-type";
-import { promises as fs } from "fs";
-import path from "path";
+import { put } from "@vercel/blob";
 import crypto from "crypto";
 
 import { AuthRequest } from "../middleware/auth.middleware.js";
@@ -51,27 +50,16 @@ export async function uploadAvatar(
     const filename =
       `${crypto.randomUUID()}.${extension}`;
 
-    const uploadDirectory = path.resolve(
-      "uploads",
-      "avatars"
+    const blob = await put(
+      `avatars/${filename}`,
+      req.file.buffer,
+      {
+        access: "public",
+        contentType: detectedType.mime,
+      }
     );
 
-    await fs.mkdir(uploadDirectory, {
-      recursive: true,
-    });
-
-    const filePath = path.join(
-      uploadDirectory,
-      filename
-    );
-
-    await fs.writeFile(
-      filePath,
-      req.file.buffer
-    );
-
-    const avatarUrl =
-      `/uploads/avatars/${filename}`;
+    const avatarUrl = blob.url;
 
     const user = await prisma.user.update({
       where: {
