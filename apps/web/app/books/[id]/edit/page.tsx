@@ -312,41 +312,18 @@ export default function EditBookPage() {
             }
             className="w-full rounded-lg border px-4 py-3"
           >
-            <option value="">
-              Choisir un thème
-            </option>
-
-            <option value="Roman">
-              Roman
-            </option>
-
-            <option value="Science">
-              Science
-            </option>
-
-            <option value="Histoire">
-              Histoire
-            </option>
-
-            <option value="Informatique">
-              Informatique
-            </option>
-
-            <option value="Philosophie">
-              Philosophie
-            </option>
-
-            <option value="Jeunesse">
-              Jeunesse
-            </option>
-
-            <option value="Biographie">
-              Biographie
-            </option>
-
-            <option value="Autre">
-              Autre
-            </option>
+            <option value="all">Tous les thèmes</option>
+            <option value="Roman">Roman</option>
+            <option value="Science">Science</option>
+            <option value="Histoire">Histoire</option>
+            <option value="Informatique">Informatique</option>
+            <option value="Philosophie">Philosophie</option>
+            <option value="Jeunesse">Jeunesse</option>
+            <option value="Cuisine">Cuisine</option>
+            <option value="Bande dessinée">Bande dessinée</option>
+            <option value="Fantastique">Fantastique</option>
+            <option value="Biographie">Biographie</option>
+            <option value="Autre">Autre</option>
           </select>
         </div>
 
