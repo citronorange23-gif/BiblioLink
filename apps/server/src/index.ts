@@ -13,7 +13,30 @@ import notificationsRoutes from "./routes/notifications.routes.js";
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://biblio-link.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Autorise les requêtes sans Origin
+      // (ex: certains appels serveur)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use("/users", usersRoutes);
@@ -31,7 +54,7 @@ app.use(
 
 app.get("/", (_req, res) => {
   res.json({
-    message: "LivretApp API is running 🚀"
+    message: "LivretApp API is running 🚀",
   });
 });
 
@@ -41,14 +64,14 @@ app.get("/health", async (_req, res) => {
 
     res.json({
       status: "ok",
-      database: "connected"
+      database: "connected",
     });
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
       status: "error",
-      database: "disconnected"
+      database: "disconnected",
     });
   }
 });
