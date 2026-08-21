@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import {
   createUser,
-  getUserProfile
+  getUserProfile,
 } from "../services/users.service.js";
+import { AuthRequest } from "../middleware/auth.middleware.js";
 
 export async function registerUser(req: Request, res: Response) {
   try {
@@ -63,46 +64,47 @@ export async function getProfile(req: Request, res: Response) {
   }
 }
 
-// // Exemple dans ton contrôleur back-end pour PATCH /auth/me
-// export async function updateMyProfile(req: any, res: any) {
-//   const userId = req.user.id;
-//   const { username, bio, neighborhood, avatarUrl } = req.body;
+export async function getCurrentUser(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    const userId = req.userId;
 
-//   let latitude = null;
-//   let longitude = null;
+    if (!userId) {
+      return res.status(401).json({
+        error: "User not authenticated",
+      });
+    }
 
-//   // Si l'utilisateur a rempli/modifié son quartier, on récupère ses coordonnées GPS
-//   if (neighborhood) {
-//     try {
-//       const query = encodeURIComponent(neighborhood + ", Canada");
-//       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`, {
-//         headers: {
-//           "User-Agent": "LivretApp/1.0"
-//         }
-//       });
-//       const data = await response.json();
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatarUrl: true,
+        bio: true,
+        neighborhood: true,
+        latitude: true,
+        longitude: true,
+      },
+    });
 
-//       if (data && data.length > 0) {
-//         latitude = parseFloat(data[0].lat);
-//         longitude = parseFloat(data[0].lon);
-//       }
-//     } catch (err) {
-//       console.error("Erreur de géocodage Nominatim:", err);
-//     }
-//   }
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
 
-//   // Mise à jour de l'utilisateur dans la base de données Prisma
-//   const updatedUser = await prisma.user.update({
-//     where: { id: userId },
-//     data: {
-//       username,
-//       bio,
-//       neighborhood,
-//       avatarUrl,
-//       latitude,
-//       longitude,
-//     },
-//   });
+    return res.json(user);
+  } catch (error) {
+    console.error("GET CURRENT USER ERROR:", error);
 
-//   return res.json({ success: true, user: updatedUser });
-// }
+    return res.status(500).json({
+      error: "Failed to fetch current user",
+    });
+  }
+}
