@@ -9,8 +9,9 @@ import {
   getBookISBN,
   editBook,
   removeBook,
-  uploadBookCover,
 } from "../controllers/books.controller.js";
+
+import { uploadBookCover } from "../controllers/book-cover.controller.js";
 
 import { requireAuth } from "../middleware/auth.middleware.js";
 
