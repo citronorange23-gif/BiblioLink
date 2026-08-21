@@ -437,16 +437,18 @@ export default function AddBookPage() {
 
           <div>
             <label className="mb-2 block font-medium">
-              État du livre
+              Langue du livre
             </label>
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
               className="w-full rounded-lg border px-4 py-3"
             >
-              <option value="good">Bon état</option>
-              <option value="fair">État correct</option>
-              <option value="poor">État moyen</option>
+              <option value="Français">Français</option>
+              <option value="Anglais">Anglais</option>
+              <option value="Espagnol">Espagnol</option>
+              <option value="Arabe">Arabe</option>
+              <option value="Portugais">Portugais</option>
             </select>
           </div>
 

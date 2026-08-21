@@ -15,7 +15,7 @@ type Book = {
   theme: string | null;
   coverImageUrl: string | null;
   description: string | null;
-  condition: string;
+  condition: string; // Utilisé pour stocker la langue
   status: string;
   createdAt: string;
   owner: {
@@ -111,8 +111,8 @@ export default async function BookPage({
             )}
 
             <p>
-              <span className="font-semibold">État :</span>{" "}
-              {book.condition}
+              <span className="font-semibold">Langue :</span>{" "}
+              {book.condition || "Français"}
             </p>
 
             {book.isbn && (

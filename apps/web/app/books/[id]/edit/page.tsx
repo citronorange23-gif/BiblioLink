@@ -371,7 +371,7 @@ export default function EditBookPage() {
         {/* ÉTAT */}
         <div>
           <label className="mb-2 block text-sm font-medium">
-            État du livre
+            Langue du livre
           </label>
 
           <select
@@ -381,17 +381,11 @@ export default function EditBookPage() {
             }
             className="w-full rounded-lg border px-4 py-3"
           >
-            <option value="good">
-              Bon état
-            </option>
-
-            <option value="fair">
-              État correct
-            </option>
-
-            <option value="poor">
-              État moyen
-            </option>
+            <option value="Français">Français</option>
+            <option value="Anglais">Anglais</option>
+            <option value="Espagnol">Espagnol</option>
+            <option value="Arabe">Arabe</option>
+            <option value="Portugais">Portugais</option>
           </select>
         </div>
 

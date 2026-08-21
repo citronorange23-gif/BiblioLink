@@ -13,10 +13,9 @@ type Book = {
   theme: string | null;
   coverImageUrl: string | null;
   status: string;
-  condition: string;
+  condition: string; // Utilisé pour stocker la langue
 };
 
-// Composant dédié à l'image avec spinner de chargement intégré
 function BookCover({
   src,
   alt,
@@ -32,7 +31,6 @@ function BookCover({
 
   return (
     <div className="relative h-full w-full flex items-center justify-center">
-      {/* Spinner affiché tant que l'image n'est pas complètement chargée */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
@@ -144,10 +142,12 @@ export default function BooksPage() {
           onChange={(e) => setConditionFilter(e.target.value)}
           className="rounded-lg border px-4 py-3 lg:col-span-1"
         >
-          <option value="all">Tous les états</option>
-          <option value="good">Bon état</option>
-          <option value="fair">État correct</option>
-          <option value="poor">État moyen</option>
+          <option value="all">Toutes les langues</option>
+          <option value="Français">Français</option>
+          <option value="Anglais">Anglais</option>
+          <option value="Espagnol">Espagnol</option>
+          <option value="Arabe">Arabe</option>
+          <option value="Portugais">Portugais</option>
         </select>
       </div>
 
@@ -199,20 +199,8 @@ export default function BooksPage() {
                       {book.status === "available" ? "Disponible" : "Emprunté"}
                     </span>
 
-                    <span
-                      className={`text-sm font-medium ${
-                        book.condition === "good"
-                          ? "text-green-600"
-                          : book.condition === "fair"
-                          ? "text-orange-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      {book.condition === "good"
-                        ? "Bon état"
-                        : book.condition === "fair"
-                        ? "État correct"
-                        : "État moyen"}
+                    <span className="text-sm font-medium text-gray-600">
+                      {book.condition || "Français"}
                     </span>
                   </div>
                 </div>
