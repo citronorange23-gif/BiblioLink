@@ -12,6 +12,10 @@ const RadiusMap = dynamic(() => import("../../components/Map"), {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+// ========================================
+// TYPES
+// ========================================
+
 type UserLocation = {
   latitude: number | null;
   longitude: number | null;
@@ -25,6 +29,7 @@ type Book = {
   coverImageUrl: string | null;
   status: string;
   condition: string;
+
   owner?: {
     username: string;
     latitude: number | null;
@@ -34,6 +39,7 @@ type Book = {
 
 // ========================================
 // CALCUL DISTANCE
+// Haversine
 // ========================================
 
 function calculateDistance(
@@ -44,24 +50,32 @@ function calculateDistance(
 ): number {
   const R = 6371;
 
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const dLat =
+    ((lat2 - lat1) * Math.PI) / 180;
+
+  const dLon =
+    ((lon2 - lon1) * Math.PI) / 180;
 
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) *
+      Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
 
   const c =
-    2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
 
   return R * c;
 }
 
 // ========================================
-// COVER LIVRE
+// COVER DU LIVRE
 // ========================================
 
 function BookCover({
@@ -71,10 +85,15 @@ function BookCover({
   src: string | null;
   alt: string;
 }) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   if (!src) {
-    return <span className="text-6xl">📖</span>;
+    return (
+      <span className="text-6xl">
+        📖
+      </span>
+    );
   }
 
   return (
@@ -88,10 +107,16 @@ function BookCover({
       <img
         src={src}
         alt={alt}
-        onLoad={() => setIsLoading(false)}
-        onError={() => setIsLoading(false)}
+        onLoad={() =>
+          setIsLoading(false)
+        }
+        onError={() =>
+          setIsLoading(false)
+        }
         className={`h-full w-full object-cover transition-opacity duration-300 ${
-          isLoading ? "opacity-0" : "opacity-100"
+          isLoading
+            ? "opacity-0"
+            : "opacity-100"
         }`}
       />
     </div>
@@ -103,23 +128,46 @@ function BookCover({
 // ========================================
 
 export default function BooksPage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [books, setBooks] =
+    useState<Book[]>([]);
 
-  // Position du user connecté
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  // ========================================
+  // POSITION DU USER CONNECTÉ
+  // ========================================
+
   const [userLocation, setUserLocation] =
     useState<UserLocation | null>(null);
 
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [themeFilter, setThemeFilter] = useState("all");
-  const [conditionFilter, setConditionFilter] = useState("all");
+  // ========================================
+  // FILTRES
+  // ========================================
 
-  // Modal carte
+  const [search, setSearch] =
+    useState("");
+
+  const [filter, setFilter] =
+    useState("all");
+
+  const [themeFilter, setThemeFilter] =
+    useState("all");
+
+  const [conditionFilter, setConditionFilter] =
+    useState("all");
+
+  // ========================================
+  // MODAL CARTE
+  // ========================================
+
   const [isMapModalOpen, setIsMapModalOpen] =
     useState(false);
 
-  // Rayon sélectionné
+  // ========================================
+  // RAYON
+  // ========================================
+
   const [radiusFilter, setRadiusFilter] =
     useState<number | null>(null);
 
@@ -142,9 +190,17 @@ export default function BooksPage() {
           );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
-        setBooks(data.books ?? []);
+        console.log(
+          "LIVRES RÉCUPÉRÉS :",
+          data.books
+        );
+
+        setBooks(
+          data.books ?? []
+        );
       } catch (error) {
         console.error(
           "BOOKS FETCH ERROR:",
@@ -166,7 +222,9 @@ export default function BooksPage() {
     async function fetchCurrentUser() {
       try {
         const token =
-          localStorage.getItem("token");
+          localStorage.getItem(
+            "token"
+          );
 
         if (!token) {
           console.error(
@@ -176,20 +234,21 @@ export default function BooksPage() {
           return;
         }
 
-        console.log(
-          "Token trouvé, récupération du user..."
-        );
+        const response =
+          await fetch(
+            `${API_URL}/users/me`,
+            {
+              method: "GET",
 
-        const response = await fetch(
-          `${API_URL}/users/me`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+
+                "Content-Type":
+                  "application/json",
+              },
+            }
+          );
 
         if (!response.ok) {
           const errorText =
@@ -206,8 +265,29 @@ export default function BooksPage() {
           );
         }
 
-        const user =
+        const data =
           await response.json();
+
+        /*
+         * Le backend peut renvoyer :
+         *
+         * {
+         *   user: {
+         *     latitude: ...,
+         *     longitude: ...
+         *   }
+         * }
+         *
+         * ou directement :
+         *
+         * {
+         *   latitude: ...,
+         *   longitude: ...
+         * }
+         */
+
+        const user =
+          data.user ?? data;
 
         console.log(
           "================================"
@@ -234,14 +314,19 @@ export default function BooksPage() {
 
         // Vérification des coordonnées
         if (
-          typeof user.latitude !== "number" ||
-          typeof user.longitude !== "number"
+          typeof user.latitude !==
+            "number" ||
+          typeof user.longitude !==
+            "number"
         ) {
           console.error(
             "Le user n'a pas de coordonnées GPS valides.",
             {
-              latitude: user.latitude,
-              longitude: user.longitude,
+              latitude:
+                user.latitude,
+
+              longitude:
+                user.longitude,
             }
           );
 
@@ -253,10 +338,13 @@ export default function BooksPage() {
           return;
         }
 
-        // On sauvegarde la position
+        // Sauvegarde de la position
         setUserLocation({
-          latitude: user.latitude,
-          longitude: user.longitude,
+          latitude:
+            user.latitude,
+
+          longitude:
+            user.longitude,
         });
       } catch (error) {
         console.error(
@@ -273,8 +361,12 @@ export default function BooksPage() {
   // FILTRAGE DES LIVRES
   // ========================================
 
-  const filteredBooks = books.filter(
-    (book) => {
+  const filteredBooks =
+    books.filter((book) => {
+      // ======================================
+      // RECHERCHE
+      // ======================================
+
       const searchValue =
         search.toLowerCase();
 
@@ -286,26 +378,48 @@ export default function BooksPage() {
           ?.toLowerCase()
           .includes(searchValue);
 
+      // ======================================
+      // STATUT
+      // ======================================
+
       const matchesStatus =
         filter === "all" ||
         book.status === filter;
+
+      // ======================================
+      // THÈME
+      // ======================================
 
       const matchesTheme =
         themeFilter === "all" ||
         book.theme === themeFilter;
 
-      const matchesCondition =
-        conditionFilter === "all" ||
-        book.condition === conditionFilter;
+      // ======================================
+      // LANGUE
+      // ======================================
 
-      // ========================================
-      // FILTRE PAR DISTANCE
-      // ========================================
+      const matchesCondition =
+        conditionFilter ===
+          "all" ||
+        book.condition ===
+          conditionFilter;
+
+      // ======================================
+      // DISTANCE
+      // ======================================
 
       let matchesRadius = true;
 
-      if (radiusFilter !== null) {
-        // Pas de position user
+      if (
+        radiusFilter !== null
+      ) {
+        /*
+         * Il faut obligatoirement :
+         *
+         * 1. la position du user
+         * 2. la position du propriétaire
+         */
+
         if (
           !userLocation ||
           typeof userLocation.latitude !==
@@ -314,10 +428,7 @@ export default function BooksPage() {
             "number"
         ) {
           matchesRadius = false;
-        }
-
-        // Pas de position propriétaire
-        else if (
+        } else if (
           !book.owner ||
           typeof book.owner.latitude !==
             "number" ||
@@ -325,20 +436,49 @@ export default function BooksPage() {
             "number"
         ) {
           matchesRadius = false;
-        }
+        } else {
+          /*
+           * Position du user
+           */
+          const userLat =
+            userLocation.latitude;
 
-        // Calcul distance
-        else {
+          const userLng =
+            userLocation.longitude;
+
+          /*
+           * Position du propriétaire
+           */
+          const ownerLat =
+            book.owner.latitude;
+
+          const ownerLng =
+            book.owner.longitude;
+
+          /*
+           * Calcul de la distance
+           */
           const distance =
             calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              book.owner.latitude,
-              book.owner.longitude
+              userLat,
+              userLng,
+              ownerLat,
+              ownerLng
             );
 
+          console.log(
+            `${book.title} → ${distance.toFixed(
+              2
+            )} km`
+          );
+
+          /*
+           * On garde seulement
+           * les livres dans le rayon.
+           */
           matchesRadius =
-            distance <= radiusFilter;
+            distance <=
+            radiusFilter;
         }
       }
 
@@ -349,8 +489,7 @@ export default function BooksPage() {
         matchesCondition &&
         matchesRadius
       );
-    }
-  );
+    });
 
   // ========================================
   // RENDER
@@ -359,7 +498,9 @@ export default function BooksPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
 
+      {/* ================================= */}
       {/* HEADER */}
+      {/* ================================= */}
 
       <div className="mb-10">
         <h1 className="text-4xl font-bold">
@@ -367,14 +508,18 @@ export default function BooksPage() {
         </h1>
 
         <p className="mt-2 text-gray-600">
-          Trouve un livre disponible près de
-          chez toi.
+          Trouve un livre disponible près
+          de chez toi.
         </p>
       </div>
 
+      {/* ================================= */}
       {/* FILTRES */}
+      {/* ================================= */}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+
+        {/* Recherche */}
 
         <input
           type="text"
@@ -385,6 +530,8 @@ export default function BooksPage() {
           }
           className="rounded-lg border px-4 py-3 outline-none focus:border-black lg:col-span-3"
         />
+
+        {/* Statut */}
 
         <select
           value={filter}
@@ -406,10 +553,14 @@ export default function BooksPage() {
           </option>
         </select>
 
+        {/* Thème */}
+
         <select
           value={themeFilter}
           onChange={(e) =>
-            setThemeFilter(e.target.value)
+            setThemeFilter(
+              e.target.value
+            )
           }
           className="rounded-lg border px-4 py-3 lg:col-span-1"
         >
@@ -462,6 +613,8 @@ export default function BooksPage() {
           </option>
         </select>
 
+        {/* Langue */}
+
         <select
           value={conditionFilter}
           onChange={(e) =>
@@ -497,7 +650,9 @@ export default function BooksPage() {
         </select>
       </div>
 
+      {/* ================================= */}
       {/* FILTRE GÉOGRAPHIQUE */}
+      {/* ================================= */}
 
       <div className="mb-8 flex items-center justify-between rounded-xl border bg-gray-50 p-4">
 
@@ -510,7 +665,8 @@ export default function BooksPage() {
           <div>
 
             <p className="font-semibold text-gray-900">
-              Filtre géographique par rayon
+              Filtre géographique par
+              rayon
             </p>
 
             <p className="text-sm text-gray-500">
@@ -520,7 +676,6 @@ export default function BooksPage() {
             </p>
 
           </div>
-
         </div>
 
         <div className="flex gap-2">
@@ -550,7 +705,9 @@ export default function BooksPage() {
         </div>
       </div>
 
+      {/* ================================= */}
       {/* MODAL CARTE */}
+      {/* ================================= */}
 
       {isMapModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -560,7 +717,8 @@ export default function BooksPage() {
             <div className="flex items-center justify-between border-b px-6 py-4">
 
               <h2 className="text-lg font-bold">
-                Choisir un rayon de recherche
+                Choisir un rayon de
+                recherche
               </h2>
 
               <button
@@ -578,10 +736,12 @@ export default function BooksPage() {
 
               <RadiusMap
                 books={books}
-                userLocation={userLocation}
+                userLocation={
+                  userLocation
+                }
                 onConfirm={(
-                  selectedRadius: number,
-                  center: [number, number]
+                  selectedRadius,
+                  center
                 ) => {
 
                   console.log(
@@ -590,7 +750,7 @@ export default function BooksPage() {
                   );
 
                   console.log(
-                    "Centre de la carte :",
+                    "Centre :",
                     center
                   );
 
@@ -609,7 +769,9 @@ export default function BooksPage() {
         </div>
       )}
 
+      {/* ================================= */}
       {/* LIVRES */}
+      {/* ================================= */}
 
       {isLoading ? (
 
@@ -623,7 +785,8 @@ export default function BooksPage() {
 
         </div>
 
-      ) : filteredBooks.length === 0 ? (
+      ) : filteredBooks.length ===
+        0 ? (
 
         <div className="rounded-xl border p-10 text-center">
 
@@ -712,12 +875,10 @@ export default function BooksPage() {
                 </div>
 
               </Link>
-
             )
           )}
 
         </div>
-
       )}
 
     </main>
