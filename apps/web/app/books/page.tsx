@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { calculateDistance } from "../../lib/geo";
 
 // Import dynamique de Leaflet pour éviter les problèmes SSR
 const RadiusMap = dynamic(() => import("../../components/Map"), {
@@ -41,38 +42,6 @@ type Book = {
 // CALCUL DISTANCE
 // Haversine
 // ========================================
-
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371;
-
-  const dLat =
-    ((lat2 - lat1) * Math.PI) / 180;
-
-  const dLon =
-    ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(dLat / 2) *
-      Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c =
-    2 *
-    Math.atan2(
-      Math.sqrt(a),
-      Math.sqrt(1 - a)
-    );
-
-  return R * c;
-}
 
 // ========================================
 // COVER DU LIVRE
@@ -169,7 +138,12 @@ export default function BooksPage() {
   // ========================================
 
   const [radiusFilter, setRadiusFilter] =
-    useState<number | null>(null);
+  useState<number | null>(null);
+
+  const [radiusCenter, setRadiusCenter] =
+  useState<[number, number] | null>(null);  
+
+  
 
   // ========================================
   // RÉCUPÉRER LES LIVRES
@@ -413,20 +387,7 @@ export default function BooksPage() {
       if (
         radiusFilter !== null
       ) {
-        /*
-         * Il faut obligatoirement :
-         *
-         * 1. la position du user
-         * 2. la position du propriétaire
-         */
-
-        if (
-          !userLocation ||
-          typeof userLocation.latitude !==
-            "number" ||
-          typeof userLocation.longitude !==
-            "number"
-        ) {
+        if (!radiusCenter) {
           matchesRadius = false;
         } else if (
           !book.owner ||
@@ -437,45 +398,14 @@ export default function BooksPage() {
         ) {
           matchesRadius = false;
         } else {
-          /*
-           * Position du user
-           */
-          const userLat =
-            userLocation.latitude;
-
-          const userLng =
-            userLocation.longitude;
-
-          /*
-           * Position du propriétaire
-           */
-          const ownerLat =
-            book.owner.latitude;
-
-          const ownerLng =
-            book.owner.longitude;
-
-          /*
-           * Calcul de la distance
-           */
           const distance =
             calculateDistance(
-              userLat,
-              userLng,
-              ownerLat,
-              ownerLng
+              radiusCenter[0],
+              radiusCenter[1],
+              book.owner.latitude,
+              book.owner.longitude
             );
 
-          console.log(
-            `${book.title} → ${distance.toFixed(
-              2
-            )} km`
-          );
-
-          /*
-           * On garde seulement
-           * les livres dans le rayon.
-           */
           matchesRadius =
             distance <=
             radiusFilter;
@@ -739,23 +669,16 @@ export default function BooksPage() {
                 userLocation={
                   userLocation
                 }
-                onConfirm={(
+                                onConfirm={(
                   selectedRadius,
                   center
                 ) => {
-
-                  console.log(
-                    "Rayon sélectionné :",
-                    selectedRadius
-                  );
-
-                  console.log(
-                    "Centre :",
-                    center
-                  );
-
                   setRadiusFilter(
                     selectedRadius
+                  );
+
+                  setRadiusCenter(
+                    center
                   );
 
                   setIsMapModalOpen(
