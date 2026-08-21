@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+// Import dynamique de la carte pour éviter les erreurs SSR avec Leaflet
+const RadiusMap = dynamic(() => import("../../components/Map"), { ssr: false });
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+const CENTER_LAT = 46.8139;
+const CENTER_LNG = -71.2080;
 
 type Book = {
   id: string;
@@ -14,7 +21,27 @@ type Book = {
   coverImageUrl: string | null;
   status: string;
   condition: string; // Utilisé pour stocker la langue
+  owner?: {
+    username: string;
+    latitude: number | null;
+    longitude: number | null;
+  };
 };
+
+// Formule de Haversine pour calculer la distance en km
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 function BookCover({
   src,
@@ -58,6 +85,10 @@ export default function BooksPage() {
   const [themeFilter, setThemeFilter] = useState("all");
   const [conditionFilter, setConditionFilter] = useState("all");
 
+  // États pour la modal de filtre par rayon
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [radiusFilter, setRadiusFilter] = useState<number | null>(null); // null = pas de filtre de rayon actif
+
   useEffect(() => {
     async function fetchBooks() {
       try {
@@ -87,7 +118,33 @@ export default function BooksPage() {
     const matchesCondition =
       conditionFilter === "all" || book.condition === conditionFilter;
 
-    return matchesSearch && matchesStatus && matchesTheme && matchesCondition;
+    // Filtre par rayon géographique si activé
+    let matchesRadius = true;
+    if (radiusFilter !== null) {
+      if (
+        !book.owner ||
+        book.owner.latitude === null ||
+        book.owner.longitude === null
+      ) {
+        matchesRadius = false;
+      } else {
+        const dist = calculateDistance(
+          CENTER_LAT,
+          CENTER_LNG,
+          book.owner.latitude,
+          book.owner.longitude
+        );
+        matchesRadius = dist <= radiusFilter;
+      }
+    }
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesTheme &&
+      matchesCondition &&
+      matchesRadius
+    );
   });
 
   return (
@@ -151,6 +208,64 @@ export default function BooksPage() {
         </select>
       </div>
 
+      {/* Bouton d'ouverture du filtre de rayon sur carte */}
+      <div className="mb-8 flex items-center justify-between rounded-xl border bg-gray-50 p-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">📍</span>
+          <div>
+            <p className="font-semibold text-gray-900">Filtre géographique par rayon</p>
+            <p className="text-sm text-gray-500">
+              {radiusFilter !== null
+                ? `Actuellement filtré à ${radiusFilter} km autour de vous`
+                : "Aucun filtre de distance appliqué"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          {radiusFilter !== null && (
+            <button
+              onClick={() => setRadiusFilter(null)}
+              className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100"
+            >
+              Réinitialiser
+            </button>
+          )}
+          <button
+            onClick={() => setIsMapModalOpen(true)}
+            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          >
+            {radiusModifierTexte(radiusFilter)}
+          </button>
+        </div>
+      </div>
+
+      {/* Modal Carte */}
+      {isMapModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative flex flex-col h-[80vh] w-[80vw] overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <h2 className="text-lg font-bold">Choisir un rayon de recherche</h2>
+              <button
+                onClick={() => setIsMapModalOpen(false)}
+                className="text-gray-500 hover:text-black font-bold text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="relative flex-1">
+             <RadiusMap
+                books={books}
+                onConfirm={(selectedRadius: number) => {
+                  setRadiusFilter(selectedRadius);
+                  setIsMapModalOpen(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-black" />
@@ -211,4 +326,9 @@ export default function BooksPage() {
       )}
     </main>
   );
+}
+
+function radiusModifierTexte(radius: number | null) {
+  if (radius === null) return "Définir un rayon";
+  return `Modifier le rayon (${radius} km)`;
 }
