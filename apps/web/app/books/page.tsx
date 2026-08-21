@@ -162,6 +162,10 @@ export default function BooksPage() {
         const user = await response.json();
 
         console.log("USER CONNECTÉ :", user);
+        console.log("LATITUDE :", user.latitude);
+        console.log("LONGITUDE :", user.longitude);
+
+        console.log("USER CONNECTÉ :", user);
 
         setUserLocation({
           latitude:
