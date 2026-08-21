@@ -132,6 +132,9 @@ export default function BooksPage() {
           <option value="Informatique">Informatique</option>
           <option value="Philosophie">Philosophie</option>
           <option value="Jeunesse">Jeunesse</option>
+          <option value="Cuisine">Cuisine</option>
+          <option value="Bande dessinée">Bande dessinée</option>
+          <option value="Fantastique">Fantastique</option>
           <option value="Biographie">Biographie</option>
           <option value="Autre">Autre</option>
         </select>
