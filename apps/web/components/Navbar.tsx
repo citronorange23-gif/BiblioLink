@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -10,6 +9,7 @@ const API_URL =
 export default function Navbar() {
   const [userId, setUserId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     async function getCurrentUser() {
@@ -37,13 +37,9 @@ export default function Navbar() {
         }
 
         const data = await response.json();
-
         setUserId(data.user?.id ?? null);
       } catch (error) {
-        console.error(
-          "Failed to get current user:",
-          error
-        );
+        console.error("Failed to get current user:", error);
 
         setUserId(null);
         setUnreadCount(0);
@@ -76,7 +72,6 @@ export default function Navbar() {
         }
 
         const data = await response.json();
-
         setUnreadCount(data.count ?? 0);
       } catch (error) {
         console.error(
@@ -99,21 +94,17 @@ export default function Navbar() {
       refreshAuthAndNotifications();
     };
 
-    window.addEventListener(
-      "auth-change",
-      handleAuthChange
-    );
-
     const handleNotificationsChange = () => {
       getUnreadCount();
     };
+
+    window.addEventListener("auth-change", handleAuthChange);
 
     window.addEventListener(
       "notifications-change",
       handleNotificationsChange
     );
 
-    // Vérifie régulièrement les nouvelles notifications
     const interval = setInterval(() => {
       getUnreadCount();
     }, 5000);
@@ -133,73 +124,163 @@ export default function Navbar() {
     };
   }, []);
 
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
   return (
     <nav className="border-b bg-white">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link
-          href="/"
-          className="text-2xl font-bold"
-        >
-          Livret
-        </Link>
-
-        <div className="flex items-center gap-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* HEADER */}
+        <div className="flex h-16 items-center justify-between">
+          {/* LOGO */}
           <Link
-            href="/books"
-            className="text-gray-600 hover:text-black"
+            href="/"
+            onClick={closeMenu}
+            className="text-2xl font-bold"
           >
-            Livres
+            Livret
           </Link>
 
-          {userId && (
+          {/* DESKTOP MENU */}
+          <div className="hidden items-center gap-6 md:flex">
             <Link
-              href="/favorites"
+              href="/books"
               className="text-gray-600 hover:text-black"
             >
-              ❤️ Favoris
+              Livres
             </Link>
-          )}
 
-          {userId && (
-            <Link
-              href="/books/add"
-              className="rounded-lg bg-black px-4 py-2 font-medium text-white hover:bg-gray-800"
-            >
-              + Ajouter un livre
-            </Link>
-          )}
+            {userId && (
+              <Link
+                href="/favorites"
+                className="text-gray-600 hover:text-black"
+              >
+                ❤️ Favoris
+              </Link>
+            )}
 
-          {userId && (
-            <Link
-              href="/conversations"
-              className="flex items-center gap-2 text-gray-600 hover:text-black"
-            >
-              Messages
+            {userId && (
+              <Link
+                href="/books/add"
+                className="whitespace-nowrap rounded-lg bg-black px-4 py-2 font-medium text-white hover:bg-gray-800"
+              >
+                + Ajouter un livre
+              </Link>
+            )}
 
-              {unreadCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </Link>
-          )}
+            {userId && (
+              <Link
+                href="/conversations"
+                className="flex items-center gap-2 whitespace-nowrap text-gray-600 hover:text-black"
+              >
+                Messages
 
-          {userId ? (
-            <Link
-              href={`/profile/${userId}`}
-              className="text-gray-600 hover:text-black"
-            >
-              Profil
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="text-gray-600 hover:text-black"
-            >
-              Connexion
-            </Link>
-          )}
+                {unreadCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {userId ? (
+              <Link
+                href={`/profile/${userId}`}
+                className="whitespace-nowrap text-gray-600 hover:text-black"
+              >
+                Profil
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-black"
+              >
+                Connexion
+              </Link>
+            )}
+          </div>
+
+          {/* MOBILE BUTTON */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-xl md:hidden"
+            aria-label="Ouvrir le menu"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? "✕" : "☰"}
+          </button>
         </div>
+
+        {/* MOBILE MENU */}
+        {menuOpen && (
+          <div className="border-t py-4 md:hidden">
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/books"
+                onClick={closeMenu}
+                className="rounded-lg px-3 py-3 text-gray-700 hover:bg-gray-100"
+              >
+                📚 Livres
+              </Link>
+
+              {userId && (
+                <Link
+                  href="/favorites"
+                  onClick={closeMenu}
+                  className="rounded-lg px-3 py-3 text-gray-700 hover:bg-gray-100"
+                >
+                  ❤️ Favoris
+                </Link>
+              )}
+
+              {userId && (
+                <Link
+                  href="/books/add"
+                  onClick={closeMenu}
+                  className="rounded-lg bg-black px-3 py-3 text-center font-medium text-white hover:bg-gray-800"
+                >
+                  + Ajouter un livre
+                </Link>
+              )}
+
+              {userId && (
+                <Link
+                  href="/conversations"
+                  onClick={closeMenu}
+                  className="flex items-center justify-between rounded-lg px-3 py-3 text-gray-700 hover:bg-gray-100"
+                >
+                  <span>💬 Messages</span>
+
+                  {unreadCount > 0 && (
+                    <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              )}
+
+              {userId ? (
+                <Link
+                  href={`/profile/${userId}`}
+                  onClick={closeMenu}
+                  className="rounded-lg px-3 py-3 text-gray-700 hover:bg-gray-100"
+                >
+                  👤 Profil
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="rounded-lg px-3 py-3 text-gray-700 hover:bg-gray-100"
+                >
+                  Connexion
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
