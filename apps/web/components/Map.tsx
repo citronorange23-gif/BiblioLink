@@ -57,7 +57,14 @@ function calculateDistance(
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
 
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return (
+    R *
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    )
+  );
 }
 
 function MapUpdater({
@@ -81,9 +88,13 @@ export default function RadiusMap({
 }: {
   books: BookWithLocation[];
   userLocation?: UserLocation | null;
-  onConfirm: (radius: number, center: [number, number]) => void;
+  onConfirm: (
+    radius: number,
+    center: [number, number]
+  ) => void;
 }) {
-  const [radius, setRadius] = useState(10);
+  // Rayon par défaut = 5 km
+  const [radius, setRadius] = useState(5);
 
   /*
    * Centre de recherche
@@ -96,13 +107,21 @@ export default function RadiusMap({
     userLocation &&
     typeof userLocation.latitude === "number" &&
     typeof userLocation.longitude === "number"
-      ? [userLocation.latitude, userLocation.longitude]
+      ? [
+          userLocation.latitude,
+          userLocation.longitude,
+        ]
       : [DEFAULT_LAT, DEFAULT_LNG];
 
   return (
     <div className="relative h-full w-full">
-      {/* Panneau de contrôle */}
-      <div className="absolute top-4 left-4 z-[1000] w-64 rounded-xl border bg-white p-4 shadow-lg">
+      
+      {/* ========================= */}
+      {/* PANNEAU DE CONTRÔLE */}
+      {/* ========================= */}
+
+      <div className="absolute left-4 right-auto top-4 z-[1000] w-64 rounded-xl border bg-white p-4 shadow-lg">
+        
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Rayon de recherche : {radius} km
         </label>
@@ -112,27 +131,38 @@ export default function RadiusMap({
           min="1"
           max="100"
           value={radius}
-          onChange={(e) => setRadius(Number(e.target.value))}
+          onChange={(e) =>
+            setRadius(Number(e.target.value))
+          }
           className="mb-4 w-full"
         />
 
         <button
-          onClick={() => onConfirm(radius, center)}
+          onClick={() =>
+            onConfirm(radius, center)
+          }
           className="w-full rounded-lg bg-black py-2 text-sm font-semibold text-white hover:bg-gray-800"
         >
           Confirmer ce rayon
         </button>
+
       </div>
 
-      {/* Carte */}
+      {/* ========================= */}
+      {/* CARTE */}
+      {/* ========================= */}
+
       <MapContainer
         center={center}
         zoom={12}
         className="h-full w-full"
       >
+
         <MapUpdater center={center} />
 
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
         {/* ========================= */}
         {/* POINT O = UTILISATEUR */}
@@ -166,19 +196,22 @@ export default function RadiusMap({
           // Pas de localisation du propriétaire
           if (
             !book.owner ||
-            typeof book.owner.latitude !== "number" ||
-            typeof book.owner.longitude !== "number"
+            typeof book.owner.latitude !==
+              "number" ||
+            typeof book.owner.longitude !==
+              "number"
           ) {
             return null;
           }
 
-          // Distance entre l'utilisateur et le propriétaire
-          const distance = calculateDistance(
-            center[0],
-            center[1],
-            book.owner.latitude,
-            book.owner.longitude
-          );
+          // Distance entre le user et le propriétaire
+          const distance =
+            calculateDistance(
+              center[0],
+              center[1],
+              book.owner.latitude,
+              book.owner.longitude
+            );
 
           // Livre hors du rayon
           if (distance > radius) {
@@ -195,16 +228,25 @@ export default function RadiusMap({
             >
               <Popup>
                 <div>
-                  <strong>{book.title}</strong>
+                  <strong>
+                    {book.title}
+                  </strong>
+
                   <br />
-                  Chez {book.owner.username}
+
+                  Chez{" "}
+                  {book.owner.username}
+
                   <br />
-                  À {distance.toFixed(1)} km
+
+                  À{" "}
+                  {distance.toFixed(1)} km
                 </div>
               </Popup>
             </Marker>
           );
         })}
+
       </MapContainer>
     </div>
   );
