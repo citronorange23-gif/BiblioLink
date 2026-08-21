@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { canadaLocations } from "@/app/data/locations";
+import { quebecLocations } from "@/app/data/locations";
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+const PROVINCE = "Québec";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -14,8 +15,7 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
-  // États pour les sélections en cascade
-  const [selectedProvince, setSelectedProvince] = useState("");
+  // États pour les sélections en cascade (Ville ➔ Quartier)
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
 
@@ -75,18 +75,14 @@ export default function EditProfilePage() {
         setLongitude(user.longitude ?? null);
 
         // Si l'utilisateur a déjà un quartier enregistré, on essaie de le pré-remplir
-        // Format attendu stocké : "Quartier, Ville, Province"
+        // Format attendu stocké : "Quartier, Ville, Québec"
         if (user.neighborhood) {
           const parts = user.neighborhood.split(",").map((p: string) => p.trim());
-          if (parts.length >= 3) {
+          if (parts.length >= 2) {
             setSelectedNeighborhood(parts[0]);
             setSelectedCity(parts[1]);
-            setSelectedProvince(parts[2]);
-          } else if (parts.length === 2) {
+          } else if (parts.length === 1) {
             setSelectedCity(parts[0]);
-            setSelectedProvince(parts[1]);
-          } else {
-            setSelectedProvince("Québec"); // Valeur par défaut logique
           }
         }
       } catch (error) {
@@ -108,12 +104,6 @@ export default function EditProfilePage() {
   // =========================
   // Gestion de la cascade
   // =========================
-
-  function handleProvinceChange(province: string) {
-    setSelectedProvince(province);
-    setSelectedCity("");
-    setSelectedNeighborhood("");
-  }
 
   function handleCityChange(city: string) {
     setSelectedCity(city);
@@ -150,27 +140,21 @@ export default function EditProfilePage() {
           if (data?.address) {
             const addr = data.address;
             const city = addr.city || addr.town || addr.village || "";
-            const state = addr.state || "";
             const suburb =
               addr.suburb || addr.neighbourhood || addr.city_district || "";
 
-            if (canadaLocations[state]) {
-              setSelectedProvince(state);
+            if (quebecLocations[city]) {
+              setSelectedCity(city);
 
-              if (canadaLocations[state][city]) {
-                setSelectedCity(city);
-
-                const quartiers = canadaLocations[state][city];
-                if (suburb && quartiers.includes(suburb)) {
-                  setSelectedNeighborhood(suburb);
-                } else {
-                  setSelectedNeighborhood("");
-                }
+              const quartiers = quebecLocations[city];
+              if (suburb && quartiers.includes(suburb)) {
+                setSelectedNeighborhood(suburb);
               } else {
-                setSelectedCity("");
                 setSelectedNeighborhood("");
               }
             } else {
+              setSelectedCity("");
+              setSelectedNeighborhood("");
               setError("Impossible de faire correspondre ta position à une ville connue.");
             }
           }
@@ -283,10 +267,6 @@ export default function EditProfilePage() {
   // Sauvegarder le profil
   // =========================
 
-  // =========================
-  // Sauvegarder le profil
-  // =========================
-
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
 
@@ -330,7 +310,7 @@ export default function EditProfilePage() {
       const neighborhoodString = [
         selectedNeighborhood,
         selectedCity,
-        selectedProvince,
+        PROVINCE,
       ]
         .filter(Boolean)
         .join(", ");
@@ -441,7 +421,7 @@ export default function EditProfilePage() {
           />
         </div>
 
-        {/* Localisation en cascade (Province ➔ Ville ➔ Quartier) */}
+        {/* Localisation en cascade (Ville ➔ Quartier) — limité au Québec */}
         <div className="space-y-4 rounded-xl border bg-gray-50/50 p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-900">📍 Localisation</h3>
@@ -455,26 +435,7 @@ export default function EditProfilePage() {
             </button>
           </div>
 
-          {/* 1. Province */}
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">
-              Province
-            </label>
-            <select
-              value={selectedProvince}
-              onChange={(e) => handleProvinceChange(e.target.value)}
-              className="w-full rounded-lg border bg-white px-4 py-2.5 text-sm outline-none focus:border-black"
-            >
-              <option value="">Sélectionner une province...</option>
-              {Object.keys(canadaLocations).map((prov) => (
-                <option key={prov} value={prov}>
-                  {prov}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 2. Ville */}
+          {/* 1. Ville */}
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">
               Ville
@@ -482,20 +443,18 @@ export default function EditProfilePage() {
             <select
               value={selectedCity}
               onChange={(e) => handleCityChange(e.target.value)}
-              disabled={!selectedProvince}
-              className="w-full rounded-lg border bg-white px-4 py-2.5 text-sm outline-none focus:border-black disabled:opacity-50"
+              className="w-full rounded-lg border bg-white px-4 py-2.5 text-sm outline-none focus:border-black"
             >
               <option value="">Sélectionner une ville...</option>
-              {selectedProvince &&
-                Object.keys(canadaLocations[selectedProvince]).map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
+              {Object.keys(quebecLocations).map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* 3. Quartier */}
+          {/* 2. Quartier */}
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">
               Quartier
@@ -508,13 +467,11 @@ export default function EditProfilePage() {
             >
               <option value="">Sélectionner un quartier...</option>
               {selectedCity &&
-                canadaLocations[selectedProvince][selectedCity].map(
-                  (quartier) => (
-                    <option key={quartier} value={quartier}>
-                      {quartier}
-                    </option>
-                  )
-                )}
+                quebecLocations[selectedCity].map((quartier) => (
+                  <option key={quartier} value={quartier}>
+                    {quartier}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
