@@ -1,43 +1,19 @@
 import { prisma } from "../lib/prisma.js";
-import fs from "fs/promises";
+import { put } from "@vercel/blob";
 import path from "path";
 import crypto from "crypto";
 
-const API_URL = "http://localhost:4000";
-
-/**
- * Dossier où les couvertures seront sauvegardées.
- *
- * apps/server/
- * └── uploads/
- *     └── covers/
- */
-// Remplacez la définition de coversDirectory par ceci :
-const coversDirectory = path.resolve(process.cwd(), "uploads", "covers");
-
-// Vérifiez aussi que le dossier est bien créé
-async function ensureCoversDirectory() {
-  await fs.mkdir(coversDirectory, {
-    recursive: true,
-  });
-}
-
 /**
  * Télécharge une couverture OpenLibrary
- * et la sauvegarde localement.
+ * et la sauvegarde sur Vercel Blob.
  */
 async function downloadCover(
   coverId: number
 ): Promise<string | undefined> {
   try {
-    await ensureCoversDirectory();
+    const openLibraryUrl = `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
 
-    const openLibraryUrl =
-      `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
-
-    const response = await fetch(
-      openLibraryUrl
-    );
+    const response = await fetch(openLibraryUrl);
 
     if (!response.ok) {
       console.error(
@@ -45,12 +21,10 @@ async function downloadCover(
         response.status,
         response.statusText
       );
-
       return undefined;
     }
 
-    const contentType =
-      response.headers.get("content-type");
+    const contentType = response.headers.get("content-type");
 
     if (
       !contentType ||
@@ -60,39 +34,29 @@ async function downloadCover(
         "OPENLIBRARY DID NOT RETURN AN IMAGE:",
         contentType
       );
-
       return undefined;
     }
 
-    const arrayBuffer =
-      await response.arrayBuffer();
-
+    const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const fileName =
-      `${crypto.randomUUID()}.jpg`;
+    const fileName = `${crypto.randomUUID()}.jpg`;
 
-    const filePath = path.join(
-      coversDirectory,
-      fileName
+    // Enregistrement sur Vercel Blob
+    const blob = await put(
+      `covers/${fileName}`,
+      buffer,
+      {
+        access: "public",
+        contentType: contentType,
+      }
     );
 
-    await fs.writeFile(
-      filePath,
-      buffer
-    );
+    console.log(`Cover uploaded to Vercel Blob: ${blob.url}`);
 
-    console.log(
-      `Cover downloaded: ${fileName}`
-    );
-
-    return `${API_URL}/uploads/covers/${fileName}`;
+    return blob.url;
   } catch (error) {
-    console.error(
-      "COVER DOWNLOAD ERROR:",
-      error
-    );
-
+    console.error("COVER DOWNLOAD ERROR:", error);
     return undefined;
   }
 }
@@ -130,12 +94,10 @@ export async function createBook(data: {
   description?: string;
   condition?: string;
 }) {
-  // Nettoyage de l'ISBN
   const cleanISBN = data.isbn
     ? data.isbn.replace(/[-\s]/g, "")
     : undefined;
 
-  // Vérifier si l'utilisateur possède déjà ce livre
   if (cleanISBN) {
     const existingBook =
       await prisma.book.findFirst({
@@ -152,13 +114,13 @@ export async function createBook(data: {
     }
   }
 
-  // Création du livre
   return prisma.book.create({
     data: {
       ...data,
       isbn: cleanISBN,
       title: data.title.trim(),
       author: data.author?.trim(),
+      condition: data.condition?.trim() || "Français",
     },
   });
 }
@@ -171,12 +133,11 @@ export async function updateBookStatus(
   userId: string,
   status: string
 ) {
-  const book =
-    await prisma.book.findUnique({
-      where: {
-        id: bookId,
-      },
-    });
+  const book = await prisma.book.findUnique({
+    where: {
+      id: bookId,
+    },
+  });
 
   if (!book) {
     throw new Error("Book not found");
@@ -231,18 +192,12 @@ export async function getBookById(
 }
 
 /**
- * Recherche un livre par ISBN
- * via OpenLibrary.
- *
- * La couverture est téléchargée localement
- * afin de ne plus dépendre d'OpenLibrary
- * pour l'affichage.
+ * Recherche un livre par ISBN via OpenLibrary.
  */
 export async function getBookByISBN(
   isbn: string
 ) {
-  const cleanISBN =
-    isbn.replace(/[-\s]/g, "");
+  const cleanISBN = isbn.replace(/[-\s]/g, "");
 
   const response = await fetch(
     `https://openlibrary.org/search.json?isbn=${encodeURIComponent(
@@ -251,13 +206,10 @@ export async function getBookByISBN(
   );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to search book"
-    );
+    throw new Error("Failed to search book");
   }
 
-  const data =
-    await response.json();
+  const data = await response.json();
 
   if (
     !data.docs ||
@@ -268,31 +220,18 @@ export async function getBookByISBN(
 
   const book = data.docs[0];
 
-  let coverImageUrl:
-    | string
-    | undefined;
+  let coverImageUrl: string | undefined;
 
-  /**
-   * Si OpenLibrary possède une couverture,
-   * on la télécharge chez nous.
-   */
   if (book.cover_i) {
-    coverImageUrl =
-      await downloadCover(
-        Number(book.cover_i)
-      );
+    coverImageUrl = await downloadCover(
+      Number(book.cover_i)
+    );
   }
 
   return {
     isbn: cleanISBN,
-
-    title:
-      book.title ?? "",
-
-    author:
-      book.author_name?.[0] ??
-      undefined,
-
+    title: book.title ?? "",
+    author: book.author_name?.[0] ?? undefined,
     coverImageUrl,
   };
 }
@@ -313,12 +252,11 @@ export async function updateBook(
     condition?: string;
   }
 ) {
-  const book =
-    await prisma.book.findUnique({
-      where: {
-        id: bookId,
-      },
-    });
+  const book = await prisma.book.findUnique({
+    where: {
+      id: bookId,
+    },
+  });
 
   if (!book) {
     throw new Error("Book not found");
@@ -338,25 +276,22 @@ export async function updateBook(
       ...data,
 
       isbn: data.isbn
-        ? data.isbn.replace(
-            /[-\s]/g,
-            ""
-          )
+        ? data.isbn.replace(/[-\s]/g, "")
         : undefined,
 
       title: data.title.trim(),
 
       author:
-        data.author?.trim() ||
-        undefined,
+        data.author?.trim() || undefined,
 
       theme:
-        data.theme?.trim() ||
-        undefined,
+        data.theme?.trim() || undefined,
 
       description:
-        data.description?.trim() ||
-        undefined,
+        data.description?.trim() || undefined,
+
+      condition:
+        data.condition?.trim() || book.condition,
     },
   });
 }
@@ -368,12 +303,11 @@ export async function deleteBook(
   bookId: string,
   userId: string
 ) {
-  const book =
-    await prisma.book.findUnique({
-      where: {
-        id: bookId,
-      },
-    });
+  const book = await prisma.book.findUnique({
+    where: {
+      id: bookId,
+    },
+  });
 
   if (!book) {
     throw new Error("Book not found");
