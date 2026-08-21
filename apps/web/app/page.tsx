@@ -31,57 +31,63 @@ export default async function Home() {
           Livres disponibles
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {data.books.map((book: any) => (
-            <Link
-              key={book.id}
-              href={`/books/${book.id}`}
-              className="flex h-full flex-col rounded-xl border p-5 transition hover:shadow-md"
-            >
-              <div className="mb-4 flex h-48 items-center justify-center rounded-lg bg-gray-100">
-                {book.coverImageUrl ? (
-                  <img
-                    src={book.coverImageUrl}
-                    alt={book.title}
-                    className="h-full w-full rounded-lg object-cover"
-                  />
-                ) : (
-                  <span className="text-5xl">📖</span>
-                )}
-              </div>
-
-              <div className="flex flex-1 flex-col">
-                <div className="min-h-[64px]">
-                  <h3 className="text-xl font-semibold">
-                    {book.title}
-                  </h3>
-
-                  <p className="mt-1 text-gray-600">
-                    {book.author || "Auteur inconnu"}
-                  </p>
+        {data.books.length === 0 ? (
+          <div className="rounded-xl border p-10 text-center">
+            <p className="text-gray-500">Aucun livre trouvé.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {data.books.map((book: any) => (
+              <Link
+                key={book.id}
+                href={`/books/${book.id}`}
+                className="flex h-full flex-col rounded-xl border p-5 transition hover:shadow-md"
+              >
+                <div className="mb-4 flex h-48 items-center justify-center rounded-lg bg-gray-100">
+                  {book.coverImageUrl ? (
+                    <img
+                      src={book.coverImageUrl}
+                      alt={book.title}
+                      className="h-full w-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="text-5xl">📖</span>
+                  )}
                 </div>
 
-                <div className="mt-auto flex items-center justify-between pt-4">
-                  <span className="text-sm text-gray-500">
-                    {book.theme || "Sans thème"}
-                  </span>
+                <div className="flex flex-1 flex-col">
+                  <div className="min-h-[64px]">
+                    <h3 className="text-xl font-semibold">
+                      {book.title}
+                    </h3>
 
-                  <span
-                    className={`text-sm font-medium ${
-                      book.status === "available"
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }`}
-                  >
-                    {book.status === "available"
-                      ? "Disponible"
-                      : "Emprunté"}
-                  </span>
+                    <p className="mt-1 text-gray-600">
+                      {book.author || "Auteur inconnu"}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto flex items-center justify-between pt-4">
+                    <span className="text-sm text-gray-500">
+                      {book.theme || "Sans thème"}
+                    </span>
+
+                    <span
+                      className={`text-sm font-medium ${
+                        book.status === "available"
+                          ? "text-green-600"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {book.status === "available"
+                        ? "Disponible"
+                        : "Emprunté"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );
