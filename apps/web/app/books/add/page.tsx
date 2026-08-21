@@ -33,7 +33,7 @@ export default function AddBookPage() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [theme, setTheme] = useState("");
-  const [condition, setCondition] = useState("good");
+  const [condition, setCondition] = useState("Français");
   const [description, setDescription] = useState("");
 
   const [coverImageUrl, setCoverImageUrl] = useState("");
@@ -244,7 +244,7 @@ export default function AddBookPage() {
     setTitle("");
     setAuthor("");
     setTheme("");
-    setCondition("good");
+    setCondition("Français");
     setDescription("");
 
     setCoverImageUrl("");
