@@ -73,7 +73,12 @@ export default function RadiusMap({ books, onConfirm }: { books: BookWithLocatio
 
         {/* Marqueurs des livres dans le rayon */}
         {books.map((book) => {
-          if (!book.owner || book.owner.latitude === null || book.owner.longitude === null) {
+          // Vérification stricte pour éviter les undefined/null
+          if (
+            !book.owner || 
+            typeof book.owner.latitude !== "number" || 
+            typeof book.owner.longitude !== "number"
+          ) {
             return null;
           }
 
