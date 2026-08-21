@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -12,8 +12,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-const centerLat = 46.8139;
-const centerLng = -71.2080;
+const DEFAULT_LAT = 46.8139;
+const DEFAULT_LNG = -71.2080;
 
 type BookWithLocation = {
   id: string;
@@ -35,8 +35,37 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export default function RadiusMap({ books, onConfirm }: { books: BookWithLocation[], onConfirm: (radius: number) => void }) {
+// Composant interne pour recentrer la carte dynamiquement sur la position détectée
+function LocationController({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 12);
+  }, [center, map]);
+  return null;
+}
+
+export default function RadiusMap({ books, onConfirm }: { books: BookWithLocation[], onConfirm: (radius: number, center: [number, number]) => void }) {
   const [radius, setRadius] = useState(10);
+  const [userCenter, setUserCenter] = useState<[number, number]>([DEFAULT_LAT, DEFAULT_LNG]);
+  const [isLocating, setIsLocating] = useState(true);
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserCenter([position.coords.latitude, position.coords.longitude]);
+          setIsLocating(false);
+        },
+        (error) => {
+          console.warn("Géolocalisation refusée ou indisponible, utilisation de la position par défaut.", error);
+          setIsLocating(false);
+        },
+        { timeout: 10000 }
+      );
+    } else {
+      setIsLocating(false);
+    }
+  }, []);
 
   return (
     <div className="relative h-full w-full">
@@ -54,26 +83,26 @@ export default function RadiusMap({ books, onConfirm }: { books: BookWithLocatio
           className="w-full mb-4"
         />
         <button
-          onClick={() => onConfirm(radius)}
+          onClick={() => onConfirm(radius, userCenter)}
           className="w-full bg-black text-white py-2 rounded-lg text-sm font-semibold hover:bg-gray-800"
         >
           Confirmer ce rayon
         </button>
       </div>
 
-      <MapContainer center={[centerLat, centerLng]} zoom={12} className="h-full w-full">
+      <MapContainer center={userCenter} zoom={12} className="h-full w-full">
+        <LocationController center={userCenter} />
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         
-        {/* Cercle bleu du rayon */}
+        {/* Cercle bleu du rayon centré sur l'utilisateur ou la position de secours */}
         <Circle 
-          center={[centerLat, centerLng]} 
+          center={userCenter} 
           radius={radius * 1000} 
           pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.2 }} 
         />
 
         {/* Marqueurs des livres dans le rayon */}
         {books.map((book) => {
-          // Vérification stricte pour éviter les undefined/null
           if (
             !book.owner || 
             typeof book.owner.latitude !== "number" || 
@@ -82,7 +111,7 @@ export default function RadiusMap({ books, onConfirm }: { books: BookWithLocatio
             return null;
           }
 
-          const dist = calculateDistance(centerLat, centerLng, book.owner.latitude, book.owner.longitude);
+          const dist = calculateDistance(userCenter[0], userCenter[1], book.owner.latitude, book.owner.longitude);
           if (dist > radius) return null;
 
           return (
