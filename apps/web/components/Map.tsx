@@ -120,7 +120,7 @@ export default function RadiusMap({
       {/* PANNEAU DE CONTRÔLE */}
       {/* ========================= */}
 
-      <div className="absolute left-4 right-auto top-4 z-[1000] w-64 rounded-xl border bg-white p-4 shadow-lg">
+      <div className="absolute top-4 right-4 left-auto z-[1000] w-64 rounded-xl border bg-white p-4 shadow-lg">
         
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Rayon de recherche : {radius} km
