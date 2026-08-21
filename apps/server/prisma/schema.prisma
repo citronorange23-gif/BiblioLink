@@ -38,7 +38,7 @@ model Book {
   theme         String?  @db.VarChar(100)
   coverImageUrl String?
   description   String?
-  condition     String   @default("good")
+  condition     String   @default("Français")
   status        String   @default("available")
   createdAt     DateTime @default(now())
 
