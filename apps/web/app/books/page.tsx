@@ -360,19 +360,24 @@ export default function BooksPage() {
         // ------------------------------------
 
         else {
-          const distance =
-            calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              book.owner.latitude,
-              book.owner.longitude
-            );
-
-          console.log(
-            `📍 ${book.title} → ${distance.toFixed(
-              2
-            )} km`
+          const distance = calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            book.owner.latitude,
+            book.owner.longitude
           );
+
+          console.log("📍 DISTANCE:", {
+            book: book.title,
+            user: userLocation,
+            owner: {
+              latitude: book.owner.latitude,
+              longitude: book.owner.longitude,
+            },
+            distance,
+            radiusFilter,
+            shouldShow: distance <= radiusFilter,
+          });
 
           // ----------------------------------
           // Garder uniquement les livres
@@ -397,6 +402,12 @@ export default function BooksPage() {
       );
     }
   );
+
+  console.log("GEO FILTER STATE:", {
+    radiusFilter,
+    userLocation,
+    booksCount: books.length,
+  });
 
   // ========================================
   // RENDER
