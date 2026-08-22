@@ -7,16 +7,16 @@ import {
   getBookByISBN,
   updateBook,
   deleteBook,
-  updateBookStatus
+  updateBookStatus,
 } from "../services/books.service.js";
-
-import { fileTypeFromBuffer } from "file-type";
-import { promises as fs } from "fs";
-import path from "path";
-import crypto from "crypto";
 
 import type { AuthRequest } from "../middleware/auth.middleware.js";
 
+/**
+ * GET /books
+ *
+ * Retourne uniquement les livres publics.
+ */
 export async function getBooks(
   _req: Request,
   res: Response
@@ -25,22 +25,38 @@ export async function getBooks(
     const books = await getAllBooks();
 
     return res.json({
-      books
+      books,
     });
   } catch (error) {
-    console.error("BOOKS ERROR:", error);
+    console.error(
+      "BOOKS ERROR:",
+      error
+    );
 
     return res.status(500).json({
-      error: "Failed to fetch books"
+      error: "Failed to fetch books",
     });
   }
 }
 
-export async function getBook(req: Request, res: Response) {
+/**
+ * GET /books/:id
+ *
+ * Un livre public est accessible à tout le monde.
+ * Un livre privé est uniquement accessible à son propriétaire.
+ */
+export async function getBook(
+  req: AuthRequest,
+  res: Response
+) {
   try {
-    const bookId = req.params.id as string;
+    const bookId =
+      req.params.id as string;
 
-    const book = await getBookById(bookId);
+    const book = await getBookById(
+      bookId,
+      req.userId
+    );
 
     if (!book) {
       return res.status(404).json({
@@ -52,7 +68,10 @@ export async function getBook(req: Request, res: Response) {
       book,
     });
   } catch (error) {
-    console.error("GET BOOK ERROR:", error);
+    console.error(
+      "GET BOOK ERROR:",
+      error
+    );
 
     return res.status(500).json({
       error: "Failed to fetch book",
@@ -60,6 +79,9 @@ export async function getBook(req: Request, res: Response) {
   }
 }
 
+/**
+ * POST /books
+ */
 export async function addBook(
   req: AuthRequest,
   res: Response
@@ -72,18 +94,33 @@ export async function addBook(
       theme,
       coverImageUrl,
       description,
-      condition
+      condition,
+      visibility,
     } = req.body;
 
-    if (!title) {
+    if (
+      !title ||
+      !title.trim()
+    ) {
       return res.status(400).json({
-        error: "title is required"
+        error: "title is required",
       });
     }
 
     if (!req.userId) {
       return res.status(401).json({
-        error: "Authentication required"
+        error: "Authentication required",
+      });
+    }
+
+    if (
+      visibility &&
+      visibility !== "public" &&
+      visibility !== "private"
+    ) {
+      return res.status(400).json({
+        error:
+          "visibility must be public or private",
       });
     }
 
@@ -95,28 +132,39 @@ export async function addBook(
       theme,
       coverImageUrl,
       description,
-      condition
+      condition,
+      visibility,
     });
 
     return res.status(201).json({
-      book
+      book,
     });
   } catch (error) {
-    console.error("CREATE BOOK ERROR:", error);
+    console.error(
+      "CREATE BOOK ERROR:",
+      error
+    );
 
-    // Interception de l'erreur du service si le livre existe déjà
-    if (error instanceof Error && error.message.includes("possèdes déjà")) {
+    if (
+      error instanceof Error &&
+      error.message.includes(
+        "possèdes déjà"
+      )
+    ) {
       return res.status(409).json({
-        error: error.message
+        error: error.message,
       });
     }
 
     return res.status(500).json({
-      error: "Failed to create book"
+      error: "Failed to create book",
     });
   }
 }
 
+/**
+ * PATCH /books/:id/status
+ */
 export async function changeBookStatus(
   req: AuthRequest,
   res: Response
@@ -124,76 +172,99 @@ export async function changeBookStatus(
   try {
     if (!req.userId) {
       return res.status(401).json({
-        error: "Authentication required"
+        error: "Authentication required",
       });
     }
 
-    const bookId = req.params.id as string;
+    const bookId =
+      req.params.id as string;
+
     const { status } = req.body;
 
-    const book = await updateBookStatus(
-      bookId,
-      req.userId,
-      status
-    );
+    const book =
+      await updateBookStatus(
+        bookId,
+        req.userId,
+        status
+      );
 
     return res.json({
-      book
+      book,
     });
-
   } catch (error) {
-    console.error("UPDATE BOOK STATUS ERROR:", error);
+    console.error(
+      "UPDATE BOOK STATUS ERROR:",
+      error
+    );
 
     if (error instanceof Error) {
-      if (error.message === "Book not found") {
+      if (
+        error.message ===
+        "Book not found"
+      ) {
         return res.status(404).json({
-          error: error.message
+          error: error.message,
         });
       }
 
       if (
-        error.message === "You are not the owner of this book" ||
-        error.message === "Invalid book status"
+        error.message ===
+          "You are not the owner of this book" ||
+        error.message ===
+          "Invalid book status"
       ) {
         return res.status(403).json({
-          error: error.message
+          error: error.message,
         });
       }
     }
 
     return res.status(500).json({
-      error: "Failed to update book status"
+      error:
+        "Failed to update book status",
     });
   }
 }
 
+/**
+ * GET /books/isbn/:isbn
+ */
 export async function getBookISBN(
   req: Request,
   res: Response
 ) {
   try {
-    const isbn = req.params.isbn as string;
+    const isbn =
+      req.params.isbn as string;
 
-    const book = await getBookByISBN(isbn);
+    const book =
+      await getBookByISBN(isbn);
 
     if (!book) {
       return res.status(404).json({
-        error: "Book not found"
+        error: "Book not found",
       });
     }
 
     return res.json({
-      book
+      book,
     });
   } catch (error) {
-    console.error("GET BOOK ISBN ERROR:", error);
+    console.error(
+      "GET BOOK ISBN ERROR:",
+      error
+    );
 
     return res.status(500).json({
-      error: "Failed to fetch book information"
+      error:
+        "Failed to fetch book information",
     });
   }
 }
 
+/**
+ * PATCH /books/:id
+ */
 export async function editBook(
   req: AuthRequest,
   res: Response
@@ -201,11 +272,12 @@ export async function editBook(
   try {
     if (!req.userId) {
       return res.status(401).json({
-        error: "Authentication required"
+        error: "Authentication required",
       });
     }
 
-    const bookId = req.params.id as string;
+    const bookId =
+      req.params.id as string;
 
     const {
       isbn,
@@ -214,12 +286,27 @@ export async function editBook(
       theme,
       coverImageUrl,
       description,
-      condition
+      condition,
+      visibility,
     } = req.body;
 
-    if (!title || !title.trim()) {
+    if (
+      !title ||
+      !title.trim()
+    ) {
       return res.status(400).json({
-        error: "title is required"
+        error: "title is required",
+      });
+    }
+
+    if (
+      visibility &&
+      visibility !== "public" &&
+      visibility !== "private"
+    ) {
+      return res.status(400).json({
+        error:
+          "visibility must be public or private",
       });
     }
 
@@ -233,36 +320,49 @@ export async function editBook(
         theme,
         coverImageUrl,
         description,
-        condition
+        condition,
+        visibility,
       }
     );
 
     return res.json({
-      book
+      book,
     });
   } catch (error) {
-    console.error("UPDATE BOOK ERROR:", error);
+    console.error(
+      "UPDATE BOOK ERROR:",
+      error
+    );
 
     if (error instanceof Error) {
-      if (error.message === "Book not found") {
+      if (
+        error.message ===
+        "Book not found"
+      ) {
         return res.status(404).json({
-          error: error.message
+          error: error.message,
         });
       }
 
-      if (error.message === "You are not the owner of this book") {
+      if (
+        error.message ===
+        "You are not the owner of this book"
+      ) {
         return res.status(403).json({
-          error: error.message
+          error: error.message,
         });
       }
     }
 
     return res.status(500).json({
-      error: "Failed to update book"
+      error: "Failed to update book",
     });
   }
 }
 
+/**
+ * DELETE /books/:id
+ */
 export async function removeBook(
   req: AuthRequest,
   res: Response
@@ -270,11 +370,12 @@ export async function removeBook(
   try {
     if (!req.userId) {
       return res.status(401).json({
-        error: "Authentication required"
+        error: "Authentication required",
       });
     }
 
-    const bookId = req.params.id as string;
+    const bookId =
+      req.params.id as string;
 
     await deleteBook(
       bookId,
@@ -282,35 +383,46 @@ export async function removeBook(
     );
 
     return res.json({
-      message: "Book deleted successfully"
+      message:
+        "Book deleted successfully",
     });
   } catch (error) {
-    console.error("DELETE BOOK ERROR:", error);
+    console.error(
+      "DELETE BOOK ERROR:",
+      error
+    );
 
     if (error instanceof Error) {
-      if (error.message === "Book not found") {
+      if (
+        error.message ===
+        "Book not found"
+      ) {
         return res.status(404).json({
-          error: error.message
+          error: error.message,
         });
       }
 
-      if (error.message === "You are not the owner of this book") {
+      if (
+        error.message ===
+        "You are not the owner of this book"
+      ) {
         return res.status(403).json({
-          error: error.message
+          error: error.message,
         });
       }
 
-      if (error.message === "Book is currently borrowed") {
+      if (
+        error.message ===
+        "Book is currently borrowed"
+      ) {
         return res.status(409).json({
-          error: error.message
+          error: error.message,
         });
       }
     }
 
     return res.status(500).json({
-      error: "Failed to delete book"
+      error: "Failed to delete book",
     });
   }
 }
-
-console.log("CONTROLLER SELF-CHECK:", typeof getBook, getBook.name);

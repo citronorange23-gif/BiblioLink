@@ -1,6 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { put } from "@vercel/blob";
-import path from "path";
+import { put } from "@Vercel/blob";
 import crypto from "crypto";
 
 /**
@@ -21,6 +20,7 @@ async function downloadCover(
         response.status,
         response.statusText
       );
+
       return undefined;
     }
 
@@ -34,6 +34,7 @@ async function downloadCover(
         "OPENLIBRARY DID NOT RETURN AN IMAGE:",
         contentType
       );
+
       return undefined;
     }
 
@@ -42,30 +43,39 @@ async function downloadCover(
 
     const fileName = `${crypto.randomUUID()}.jpg`;
 
-    // Enregistrement sur Vercel Blob
     const blob = await put(
       `covers/${fileName}`,
       buffer,
       {
         access: "public",
-        contentType: contentType,
+        contentType,
       }
     );
 
-    console.log(`Cover uploaded to Vercel Blob: ${blob.url}`);
+    console.log(
+      `Cover uploaded to Vercel Blob: ${blob.url}`
+    );
 
     return blob.url;
   } catch (error) {
-    console.error("COVER DOWNLOAD ERROR:", error);
+    console.error(
+      "COVER DOWNLOAD ERROR:",
+      error
+    );
+
     return undefined;
   }
 }
 
 /**
- * Retourne tous les livres.
+ * Retourne tous les livres publics.
  */
 export async function getAllBooks() {
   return prisma.book.findMany({
+    where: {
+      visibility: "public",
+    },
+
     include: {
       owner: {
         select: {
@@ -95,11 +105,29 @@ export async function createBook(data: {
   coverImageUrl?: string;
   description?: string;
   condition?: string;
+  visibility?: "public" | "private";
 }) {
   const cleanISBN = data.isbn
     ? data.isbn.replace(/[-\s]/g, "")
     : undefined;
 
+  /**
+   * Vérifier que la visibilité est valide.
+   */
+  if (
+    data.visibility !== undefined &&
+    data.visibility !== "public" &&
+    data.visibility !== "private"
+  ) {
+    throw new Error(
+      "Invalid book visibility"
+    );
+  }
+
+  /**
+   * Vérifier si l'utilisateur possède
+   * déjà un livre avec le même ISBN.
+   */
   if (cleanISBN) {
     const existingBook =
       await prisma.book.findFirst({
@@ -119,10 +147,22 @@ export async function createBook(data: {
   return prisma.book.create({
     data: {
       ...data,
+
       isbn: cleanISBN,
+
       title: data.title.trim(),
-      author: data.author?.trim(),
-      condition: data.condition?.trim() || "Français",
+
+      author:
+        data.author?.trim() || undefined,
+
+      condition:
+        data.condition?.trim() || "Français",
+
+      /**
+       * Public par défaut.
+       */
+      visibility:
+        data.visibility || "public",
     },
   });
 }
@@ -155,13 +195,16 @@ export async function updateBookStatus(
     status !== "available" &&
     status !== "borrowed"
   ) {
-    throw new Error("Invalid book status");
+    throw new Error(
+      "Invalid book status"
+    );
   }
 
   return prisma.book.update({
     where: {
       id: bookId,
     },
+
     data: {
       status,
     },
@@ -170,14 +213,30 @@ export async function updateBookStatus(
 
 /**
  * Récupérer un livre par son ID.
+ *
+ * Un livre est accessible si :
+ * - il est public
+ * OU
+ * - l'utilisateur connecté est le propriétaire.
  */
 export async function getBookById(
-  bookId: string
+  bookId: string,
+  userId?: string
 ) {
-  return prisma.book.findUnique({
+  return prisma.book.findFirst({
     where: {
       id: bookId,
+
+      OR: [
+        {
+          visibility: "public",
+        },
+        {
+          ownerId: userId,
+        },
+      ],
     },
+
     include: {
       owner: {
         select: {
@@ -199,7 +258,8 @@ export async function getBookById(
 export async function getBookByISBN(
   isbn: string
 ) {
-  const cleanISBN = isbn.replace(/[-\s]/g, "");
+  const cleanISBN =
+    isbn.replace(/[-\s]/g, "");
 
   const response = await fetch(
     `https://openlibrary.org/search.json?isbn=${encodeURIComponent(
@@ -208,10 +268,13 @@ export async function getBookByISBN(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to search book");
+    throw new Error(
+      "Failed to search book"
+    );
   }
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   if (
     !data.docs ||
@@ -222,18 +285,27 @@ export async function getBookByISBN(
 
   const book = data.docs[0];
 
-  let coverImageUrl: string | undefined;
+  let coverImageUrl:
+    | string
+    | undefined;
 
   if (book.cover_i) {
-    coverImageUrl = await downloadCover(
-      Number(book.cover_i)
-    );
+    coverImageUrl =
+      await downloadCover(
+        Number(book.cover_i)
+      );
   }
 
   return {
     isbn: cleanISBN,
-    title: book.title ?? "",
-    author: book.author_name?.[0] ?? undefined,
+
+    title:
+      book.title ?? "",
+
+    author:
+      book.author_name?.[0] ??
+      undefined,
+
     coverImageUrl,
   };
 }
@@ -252,16 +324,20 @@ export async function updateBook(
     coverImageUrl?: string;
     description?: string;
     condition?: string;
+    visibility?: "public" | "private";
   }
 ) {
-  const book = await prisma.book.findUnique({
-    where: {
-      id: bookId,
-    },
-  });
+  const book =
+    await prisma.book.findUnique({
+      where: {
+        id: bookId,
+      },
+    });
 
   if (!book) {
-    throw new Error("Book not found");
+    throw new Error(
+      "Book not found"
+    );
   }
 
   if (book.ownerId !== userId) {
@@ -270,30 +346,56 @@ export async function updateBook(
     );
   }
 
+  /**
+   * Vérifier que la visibilité est valide.
+   */
+  if (
+    data.visibility !== undefined &&
+    data.visibility !== "public" &&
+    data.visibility !== "private"
+  ) {
+    throw new Error(
+      "Invalid book visibility"
+    );
+  }
+
   return prisma.book.update({
     where: {
       id: bookId,
     },
+
     data: {
       ...data,
 
       isbn: data.isbn
-        ? data.isbn.replace(/[-\s]/g, "")
+        ? data.isbn.replace(
+            /[-\s]/g,
+            ""
+          )
         : undefined,
 
-      title: data.title.trim(),
+      title:
+        data.title.trim(),
 
       author:
-        data.author?.trim() || undefined,
+        data.author?.trim() ||
+        undefined,
 
       theme:
-        data.theme?.trim() || undefined,
+        data.theme?.trim() ||
+        undefined,
 
       description:
-        data.description?.trim() || undefined,
+        data.description?.trim() ||
+        undefined,
 
       condition:
-        data.condition?.trim() || book.condition,
+        data.condition?.trim() ||
+        book.condition,
+
+      visibility:
+        data.visibility ??
+        book.visibility,
     },
   });
 }
@@ -305,14 +407,17 @@ export async function deleteBook(
   bookId: string,
   userId: string
 ) {
-  const book = await prisma.book.findUnique({
-    where: {
-      id: bookId,
-    },
-  });
+  const book =
+    await prisma.book.findUnique({
+      where: {
+        id: bookId,
+      },
+    });
 
   if (!book) {
-    throw new Error("Book not found");
+    throw new Error(
+      "Book not found"
+    );
   }
 
   if (book.ownerId !== userId) {

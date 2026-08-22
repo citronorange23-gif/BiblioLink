@@ -31,20 +31,58 @@ const upload = multer({
       "image/webp",
     ];
 
-    if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error("Invalid image type"));
+    if (
+      !allowedTypes.includes(
+        file.mimetype
+      )
+    ) {
+      return cb(
+        new Error("Invalid image type")
+      );
     }
 
     cb(null, true);
   },
 });
 
+/**
+ * Tous les livres publics
+ */
 router.get("/", getBooks);
-router.get("/isbn/:isbn", getBookISBN);
-router.get("/:id", getBook);
 
-router.post("/", requireAuth, addBook);
+/**
+ * Recherche ISBN
+ */
+router.get(
+  "/isbn/:isbn",
+  getBookISBN
+);
 
+/**
+ * Livre spécifique
+ *
+ * Auth obligatoire pour pouvoir
+ * vérifier si l'utilisateur est propriétaire
+ * d'un livre privé.
+ */
+router.get(
+  "/:id",
+  requireAuth,
+  getBook
+);
+
+/**
+ * Créer un livre
+ */
+router.post(
+  "/",
+  requireAuth,
+  addBook
+);
+
+/**
+ * Upload couverture
+ */
 router.post(
   "/cover",
   requireAuth,
@@ -52,18 +90,27 @@ router.post(
   uploadBookCover
 );
 
+/**
+ * Modifier statut
+ */
 router.patch(
   "/:id/status",
   requireAuth,
   changeBookStatus
 );
 
+/**
+ * Modifier livre
+ */
 router.patch(
   "/:id",
   requireAuth,
   editBook
 );
 
+/**
+ * Supprimer livre
+ */
 router.delete(
   "/:id",
   requireAuth,
