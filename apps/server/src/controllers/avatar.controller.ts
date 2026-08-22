@@ -5,7 +5,6 @@ import crypto from "crypto";
 
 import { AuthRequest } from "../middleware/auth.middleware.js";
 import { prisma } from "../lib/prisma.js";
-
 export async function uploadAvatar(
   req: AuthRequest,
   res: Response
