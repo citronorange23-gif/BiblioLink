@@ -483,7 +483,7 @@ export default function AddBookPage() {
                       : "public"
                   )
                 }
-                className={`relative h-7 w-12 rounded-full transition-colors ${
+                className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
                   visibility === "public"
                     ? "bg-black"
                     : "bg-gray-300"
@@ -491,9 +491,9 @@ export default function AddBookPage() {
                 aria-label="Changer la visibilité du livre"
               >
                 <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+                  className={`absolute left-0 top-1 h-5 w-5 rounded-full bg-white transition-transform ${
                     visibility === "public"
-                      ? "translate-x-6"
+                      ? "translate-x-7"
                       : "translate-x-1"
                   }`}
                 />
