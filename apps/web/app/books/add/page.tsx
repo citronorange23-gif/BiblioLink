@@ -34,6 +34,7 @@ export default function AddBookPage() {
   const [author, setAuthor] = useState("");
   const [theme, setTheme] = useState("");
   const [condition, setCondition] = useState("Français");
+  const [visibility, setVisibility] = useState("public");
   const [description, setDescription] = useState("");
 
   const [coverImageUrl, setCoverImageUrl] = useState("");
@@ -210,6 +211,7 @@ export default function AddBookPage() {
             coverImageUrl: coverImageUrl || undefined,
             description: description.trim() || undefined,
             condition,
+            visibility,
           }),
         }
       );
@@ -450,6 +452,53 @@ export default function AddBookPage() {
               <option value="Arabe">Arabe</option>
               <option value="Portugais">Portugais</option>
             </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block font-medium">
+              Visibilité du livre
+            </label>
+
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div>
+                <p className="font-medium">
+                  {visibility === "public"
+                    ? "🌎 Public"
+                    : "🔒 Privé"}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  {visibility === "public"
+                    ? "Les autres utilisateurs peuvent voir ce livre."
+                    : "Seul toi peux voir ce livre."}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibility(
+                    visibility === "public"
+                      ? "private"
+                      : "public"
+                  )
+                }
+                className={`relative h-7 w-12 rounded-full transition-colors ${
+                  visibility === "public"
+                    ? "bg-black"
+                    : "bg-gray-300"
+                }`}
+                aria-label="Changer la visibilité du livre"
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+                    visibility === "public"
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           <div>

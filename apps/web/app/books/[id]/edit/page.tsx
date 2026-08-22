@@ -20,6 +20,7 @@ type Book = {
   description: string | null;
   condition: string;
   status: string;
+  visibility: string;
 };
 
 export default function EditBookPage() {
@@ -36,6 +37,7 @@ export default function EditBookPage() {
   const [theme, setTheme] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [coverPreview, setCoverPreview] = useState("");
+  const [visibility, setVisibility] = useState("public");
   const [description, setDescription] = useState("");
   const [condition, setCondition] = useState("");
 
@@ -89,6 +91,10 @@ export default function EditBookPage() {
 
         setCondition(
           loadedBook.condition ?? ""
+        );
+
+        setVisibility(
+          loadedBook.visibility ?? "public"
         );
       } catch (error) {
         console.error(
@@ -155,25 +161,14 @@ export default function EditBookPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            isbn:
-              isbn.trim() || undefined,
-
+            isbn: isbn.trim() || undefined,
             title: title.trim(),
-
-            author:
-              author.trim() || undefined,
-
-            theme:
-              theme || undefined,
-
-            coverImageUrl:
-              coverImageUrl || undefined,
-
-            description:
-              description.trim() || undefined,
-
-            condition:
-              condition || undefined,
+            author: author.trim() || undefined,
+            theme: theme || undefined,
+            coverImageUrl: coverImageUrl || undefined,
+            description: description.trim() || undefined,
+            condition: condition || undefined,
+            visibility,
           }),
         }
       );
@@ -348,6 +343,53 @@ export default function EditBookPage() {
                 onChange={handleCoverChange}
               />
             </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">
+            Visibilité du livre
+          </label>
+
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <p className="font-medium">
+                {visibility === "public"
+                  ? "🌎 Public"
+                  : "🔒 Privé"}
+              </p>
+
+              <p className="text-sm text-gray-500">
+                {visibility === "public"
+                  ? "Les autres utilisateurs peuvent voir ce livre."
+                  : "Seul toi peux voir ce livre."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setVisibility(
+                  visibility === "public"
+                    ? "private"
+                    : "public"
+                )
+              }
+              className={`relative h-7 w-12 rounded-full transition-colors ${
+                visibility === "public"
+                  ? "bg-black"
+                  : "bg-gray-300"
+              }`}
+              aria-label="Changer la visibilité du livre"
+            >
+              <span
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+                  visibility === "public"
+                    ? "translate-x-6"
+                    : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         </div>
 
