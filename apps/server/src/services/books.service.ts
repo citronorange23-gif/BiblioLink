@@ -74,6 +74,8 @@ export async function getAllBooks() {
           avatarUrl: true,
           bio: true,
           neighborhood: true,
+          latitude: true,
+          longitude: true,
           createdAt: true,
         },
       },
