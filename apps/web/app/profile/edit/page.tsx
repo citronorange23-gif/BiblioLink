@@ -467,11 +467,11 @@ export default function EditProfilePage() {
             >
               <option value="">Sélectionner un quartier...</option>
               {selectedCity &&
-                quebecLocations[selectedCity].map((quartier) => (
+                (quebecLocations[selectedCity] ?? []).map((quartier) => (
                   <option key={quartier} value={quartier}>
                     {quartier}
                   </option>
-                ))}
+              ))}
             </select>
           </div>
         </div>

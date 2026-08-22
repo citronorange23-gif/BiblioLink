@@ -14,6 +14,11 @@ const RadiusMap = dynamic(() => import("../../components/Map"), {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+const DEFAULT_LOCATION = {
+  latitude: 52.4760892,
+  longitude: -71.8258668,
+};
+
 // ========================================
 // TYPES
 // ========================================
@@ -240,6 +245,25 @@ export default function BooksPage() {
               latitude: user.latitude,
               longitude: user.longitude,
             }
+          );
+
+          setUserLocation({
+            latitude: null,
+            longitude: null,
+          });
+
+          return;
+        }
+
+        // Cette position correspond à la position par défaut.
+        // On ne l'utilise PAS comme localisation réelle
+        // pour le filtre de rayon.
+        if (
+          user.latitude === DEFAULT_LOCATION.latitude &&
+          user.longitude === DEFAULT_LOCATION.longitude
+        ) {
+          console.log(
+            "📍 Position par défaut détectée : localisation non définie."
           );
 
           setUserLocation({
