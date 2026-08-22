@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Visibility {
+  public
+  private
+}
+
 model User {
   id           String   @id @default(uuid())
   username     String   @unique @db.VarChar(50)
@@ -30,17 +35,18 @@ model User {
 }
 
 model Book {
-  id            String   @id @default(uuid())
+  id            String     @id @default(uuid())
   ownerId       String
-  isbn          String?  @db.VarChar(20)
-  title         String   @db.VarChar(255)
-  author        String?  @db.VarChar(255)
-  theme         String?  @db.VarChar(100)
+  isbn          String?    @db.VarChar(20)
+  title         String     @db.VarChar(255)
+  author        String?    @db.VarChar(255)
+  theme         String?    @db.VarChar(100)
   coverImageUrl String?
   description   String?
-  condition     String   @default("Français")
-  status        String   @default("available")
-  createdAt     DateTime @default(now())
+  condition     String     @default("Français")
+  status        String     @default("available")
+  visibility    Visibility @default(public)
+  createdAt     DateTime   @default(now())
 
   owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   favorites     Favorite[]
@@ -49,6 +55,7 @@ model Book {
   @@index([ownerId])
   @@index([isbn])
   @@index([status])
+  @@index([visibility])
 }
 
 model Favorite {
