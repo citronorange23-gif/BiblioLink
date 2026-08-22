@@ -140,25 +140,23 @@ export default function RadiusMap({
         {/* ========================= */}
         {/* POINT O = UTILISATEUR */}
         {/* ========================= */}
-
         <Marker position={center}>
-          <Popup>
+        <Popup>
             <strong>Vous êtes ici</strong>
-          </Popup>
+        </Popup>
         </Marker>
 
         {/* ========================= */}
         {/* CERCLE DE RECHERCHE */}
         {/* ========================= */}
-
         <Circle
-          center={center}
-          radius={radius * 1000}
-          pathOptions={{
+        center={center}
+        radius={radius * 1000}
+        pathOptions={{
             color: "#3b82f6",
             fillColor: "#3b82f6",
             fillOpacity: 0.2,
-          }}
+        }}
         />
 
         {/* ========================= */}

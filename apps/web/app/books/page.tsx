@@ -571,27 +571,24 @@ export default function BooksPage() {
       {/* ====================================== */}
 
       <div className="mb-8 flex flex-col gap-4 rounded-xl border bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-
+        
         <div className="flex items-center gap-2">
-          <span className="text-xl">
-            📍
-          </span>
-
+          <span className="text-xl">📍</span>
           <div>
             <p className="font-semibold text-gray-900">
               Filtre géographique par rayon
             </p>
-
             <p className="text-sm text-gray-500">
-              {radiusFilter !== null
-                ? `Actuellement filtré à ${radiusFilter} km autour de vous`
-                : "Aucun filtre de distance appliqué"}
+              {userLocation?.latitude && userLocation?.longitude
+                ? (radiusFilter !== null
+                    ? `Actuellement filtré à ${radiusFilter} km autour de vous`
+                    : "Aucun filtre de distance appliqué")
+                : "Position non définie"}
             </p>
           </div>
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-
           {radiusFilter !== null && (
             <button
               onClick={() => setRadiusFilter(null)}
@@ -602,14 +599,21 @@ export default function BooksPage() {
           )}
 
           <button
-            onClick={() => setIsMapModalOpen(true)}
+            onClick={() => {
+              // Vérification de la présence de la localisation
+              if (!userLocation?.latitude || !userLocation?.longitude) {
+                alert("Vous devez d'abord définir votre localisation dans votre profil pour utiliser ce filtre.");
+                // Optionnel : rediriger vers la page profil si besoin
+                // window.location.href = '/profile'; 
+              } else {
+                setIsMapModalOpen(true);
+              }
+            }}
             className="w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 sm:w-auto"
           >
             {radiusModifierTexte(radiusFilter)}
           </button>
-
         </div>
-
       </div>
 
       {/* ====================================== */}
