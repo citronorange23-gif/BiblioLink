@@ -414,20 +414,19 @@ export default function BooksPage() {
   // ========================================
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:py-12">
 
       {/* ====================================== */}
       {/* HEADER */}
       {/* ====================================== */}
 
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold">
+      <div className="mb-8 sm:mb-10">
+        <h1 className="text-3xl font-bold sm:text-4xl">
           Livres 📚
         </h1>
 
-        <p className="mt-2 text-gray-600">
-          Trouve un livre disponible près de
-          chez toi.
+        <p className="mt-2 text-sm text-gray-600 sm:text-base">
+          Trouve un livre disponible près de chez toi.
         </p>
       </div>
 
@@ -435,7 +434,7 @@ export default function BooksPage() {
       {/* FILTRES */}
       {/* ====================================== */}
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:gap-4">
 
         {/* Recherche */}
 
@@ -446,7 +445,7 @@ export default function BooksPage() {
           onChange={(e) =>
             setSearch(e.target.value)
           }
-          className="rounded-lg border px-4 py-3 outline-none focus:border-black lg:col-span-3"
+          className="w-full rounded-lg border px-4 py-3 text-sm outline-none focus:border-black sm:text-base lg:col-span-3"
         />
 
         {/* Statut */}
@@ -456,7 +455,7 @@ export default function BooksPage() {
           onChange={(e) =>
             setFilter(e.target.value)
           }
-          className="rounded-lg border px-4 py-3 lg:col-span-1"
+          className="w-full rounded-lg border px-4 py-3 lg:col-span-1"
         >
           <option value="all">
             Tous les statuts
@@ -478,7 +477,7 @@ export default function BooksPage() {
           onChange={(e) =>
             setThemeFilter(e.target.value)
           }
-          className="rounded-lg border px-4 py-3 lg:col-span-1"
+          className="w-full rounded-lg border px-4 py-3 lg:col-span-1"
         >
           <option value="all">
             Tous les thèmes
@@ -538,7 +537,7 @@ export default function BooksPage() {
               e.target.value
             )
           }
-          className="rounded-lg border px-4 py-3 lg:col-span-1"
+          className="w-full rounded-lg border px-4 py-3 lg:col-span-1"
         >
           <option value="all">
             Toutes les langues
@@ -571,16 +570,14 @@ export default function BooksPage() {
       {/* FILTRE GÉOGRAPHIQUE */}
       {/* ====================================== */}
 
-      <div className="mb-8 flex items-center justify-between rounded-xl border bg-gray-50 p-4">
+      <div className="mb-8 flex flex-col gap-4 rounded-xl border bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
 
         <div className="flex items-center gap-2">
-
           <span className="text-xl">
             📍
           </span>
 
           <div>
-
             <p className="font-semibold text-gray-900">
               Filtre géographique par rayon
             </p>
@@ -590,33 +587,25 @@ export default function BooksPage() {
                 ? `Actuellement filtré à ${radiusFilter} km autour de vous`
                 : "Aucun filtre de distance appliqué"}
             </p>
-
           </div>
-
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
 
           {radiusFilter !== null && (
             <button
-              onClick={() =>
-                setRadiusFilter(null)
-              }
-              className="rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100"
+              onClick={() => setRadiusFilter(null)}
+              className="w-full rounded-lg border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100 sm:w-auto"
             >
               Réinitialiser
             </button>
           )}
 
           <button
-            onClick={() =>
-              setIsMapModalOpen(true)
-            }
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            onClick={() => setIsMapModalOpen(true)}
+            className="w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 sm:w-auto"
           >
-            {radiusModifierTexte(
-              radiusFilter
-            )}
+            {radiusModifierTexte(radiusFilter)}
           </button>
 
         </div>
@@ -629,15 +618,13 @@ export default function BooksPage() {
 
       {isMapModalOpen && (
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm sm:p-4">
 
-          <div className="relative flex h-[80vh] w-[80vw] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="relative flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-[80vh] sm:w-[90vw]">
 
-            {/* Header modal */}
+            <div className="flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6 sm:py-4">
 
-            <div className="flex items-center justify-between border-b px-6 py-4">
-
-              <h2 className="text-lg font-bold">
+              <h2 className="text-base font-bold sm:text-lg">
                 Choisir un rayon de recherche
               </h2>
 
@@ -720,7 +707,7 @@ export default function BooksPage() {
 
       ) : (
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
 
           {filteredBooks.map(
             (book) => (
@@ -734,7 +721,7 @@ export default function BooksPage() {
 
                 {/* Cover */}
 
-                <div className="flex h-64 items-center justify-center bg-gray-100">
+                <div className="flex h-56 items-center justify-center bg-gray-100 sm:h-64">
 
                   <BookCover
                     src={
@@ -747,11 +734,11 @@ export default function BooksPage() {
 
                 {/* Infos */}
 
-                <div className="flex min-h-[180px] flex-col p-5">
+                <div className="flex min-h-[170px] flex-col p-4 sm:min-h-[180px] sm:p-5">
 
                   <div className="h-[76px]">
 
-                    <h2 className="text-xl font-semibold">
+                    <h2 className="line-clamp-2 text-lg font-semibold sm:text-xl">
                       {book.title}
                     </h2>
 
