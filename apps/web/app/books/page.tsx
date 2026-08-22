@@ -571,24 +571,34 @@ export default function BooksPage() {
       {/* ====================================== */}
 
       <div className="mb-8 flex flex-col gap-4 rounded-xl border bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-        
+
         <div className="flex items-center gap-2">
-          <span className="text-xl">📍</span>
+
+          <span className="text-xl">
+            📍
+          </span>
+
           <div>
+
             <p className="font-semibold text-gray-900">
               Filtre géographique par rayon
             </p>
+
             <p className="text-sm text-gray-500">
-              {userLocation?.latitude && userLocation?.longitude
-                ? (radiusFilter !== null
-                    ? `Actuellement filtré à ${radiusFilter} km autour de vous`
-                    : "Aucun filtre de distance appliqué")
+              {typeof userLocation?.latitude === "number" &&
+              typeof userLocation?.longitude === "number"
+                ? radiusFilter !== null
+                  ? `Actuellement filtré à ${radiusFilter} km autour de vous`
+                  : "Aucun filtre de distance appliqué"
                 : "Position non définie"}
             </p>
+
           </div>
+
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+
           {radiusFilter !== null && (
             <button
               onClick={() => setRadiusFilter(null)}
@@ -600,20 +610,29 @@ export default function BooksPage() {
 
           <button
             onClick={() => {
-              // Vérification de la présence de la localisation
-              if (!userLocation?.latitude || !userLocation?.longitude) {
-                alert("Vous devez d'abord définir votre localisation dans votre profil pour utiliser ce filtre.");
-                // Optionnel : rediriger vers la page profil si besoin
-                // window.location.href = '/profile'; 
-              } else {
-                setIsMapModalOpen(true);
+
+              const hasUserLocation =
+                typeof userLocation?.latitude === "number" &&
+                typeof userLocation?.longitude === "number";
+
+              if (!hasUserLocation) {
+                alert(
+                  "Vous devez d'abord définir votre localisation dans votre profil pour utiliser ce filtre."
+                );
+
+                return;
               }
+
+              setIsMapModalOpen(true);
+
             }}
             className="w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 sm:w-auto"
           >
             {radiusModifierTexte(radiusFilter)}
           </button>
+
         </div>
+
       </div>
 
       {/* ====================================== */}
@@ -648,13 +667,11 @@ export default function BooksPage() {
             <div className="relative flex-1">
 
               <RadiusMap
-                books={books}
                 userLocation={userLocation}
                 onConfirm={(
                   selectedRadius: number,
                   center: [number, number]
                 ) => {
-
                   console.log(
                     "Rayon sélectionné :",
                     selectedRadius
@@ -665,13 +682,9 @@ export default function BooksPage() {
                     center
                   );
 
-                  setRadiusFilter(
-                    selectedRadius
-                  );
+                  setRadiusFilter(selectedRadius);
 
-                  setIsMapModalOpen(
-                    false
-                  );
+                  setIsMapModalOpen(false);
                 }}
               />
 
