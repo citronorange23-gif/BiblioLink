@@ -452,6 +452,10 @@ export default function AddBookPage() {
               <option value="Arabe">Arabe</option>
               <option value="Portugais">Portugais</option>
               <option value="Autre">Autre</option>
+              <option value="Italien">Italien</option>
+              <option value="Allemand">Allemand</option>
+              <option value="Japonais">Japonais</option>
+              <option value="Mandarin">Mandarin</option>
             </select>
           </div>
 

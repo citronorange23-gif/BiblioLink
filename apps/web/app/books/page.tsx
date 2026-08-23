@@ -145,6 +145,9 @@ export default function BooksPage() {
     "Espagnol",
     "Arabe",
     "Portugais",
+    "Italien",
+    "Allemend",
+    "Japonais",
     "Autre",
   ];
 
