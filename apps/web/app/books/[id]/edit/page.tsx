@@ -428,6 +428,7 @@ export default function EditBookPage() {
             <option value="Espagnol">Espagnol</option>
             <option value="Arabe">Arabe</option>
             <option value="Portugais">Portugais</option>
+            <option value="Autre">Autre</option>
           </select>
         </div>
 

@@ -145,6 +145,7 @@ export default function BooksPage() {
     "Espagnol",
     "Arabe",
     "Portugais",
+    "Autre",
   ];
 
   const statuses = [
