@@ -98,9 +98,6 @@ export async function addBook(
       visibility,
     } = req.body;
 
-    console.log("VISIBILITY REÇUE:", visibility);
-    console.log("BODY REÇU:", req.body);
-
     if (
       !title ||
       !title.trim()

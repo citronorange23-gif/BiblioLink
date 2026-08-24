@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import BorrowButton from "./BorrowButton";
 import FavoriteButton from "./FavoriteButton";
 import BookCover from "@/components/BookCover";
@@ -15,7 +19,7 @@ type Book = {
   theme: string | null;
   coverImageUrl: string | null;
   description: string | null;
-  condition: string; // Utilisé pour stocker la langue
+  condition: string;
   status: string;
   createdAt: string;
   owner: {
@@ -28,34 +32,64 @@ type Book = {
   };
 };
 
-export default async function BookPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default function BookPage() {
+  const params = useParams();
+  const id = params.id as string;
 
-  const response = await fetch(`${API_URL}/books/${id}`);
+  const [book, setBook] = useState<Book | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  if (!response.ok) {
+  useEffect(() => {
+    async function fetchBook() {
+      const token =
+        localStorage.getItem("token") ??
+        localStorage.getItem("accessToken");
+
+      try {
+        const response = await fetch(`${API_URL}/books/${id}`, {
+          headers: token
+            ? { Authorization: `Bearer ${token}` }
+            : {},
+        });
+
+        if (!response.ok) {
+          setNotFound(true);
+          return;
+        }
+
+        const data = await response.json();
+        setBook(data.book);
+      } catch (error) {
+        console.error("FETCH BOOK ERROR:", error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBook();
+  }, [id]);
+
+  if (loading) {
     return (
       <main className="mx-auto max-w-4xl px-6 py-12">
-        <h1 className="text-3xl font-bold">
-          Livre introuvable
-        </h1>
+        <p>Chargement...</p>
+      </main>
+    );
+  }
 
-        <Link
-          href="/books"
-          className="mt-6 inline-block underline"
-        >
+  if (notFound || !book) {
+    return (
+      <main className="mx-auto max-w-4xl px-6 py-12">
+        <h1 className="text-3xl font-bold">Livre introuvable</h1>
+
+        <Link href="/books" className="mt-6 inline-block underline">
           Retour aux livres
         </Link>
       </main>
     );
   }
-
-  const data = await response.json();
-  const book: Book = data.book;
 
   const isAvailable = book.status === "available";
 
@@ -91,9 +125,7 @@ export default async function BookPage({
           </div>
 
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-4xl font-bold">
-              {book.title}
-            </h1>
+            <h1 className="text-4xl font-bold">{book.title}</h1>
 
             <FavoriteButton bookId={book.id} />
           </div>
@@ -125,9 +157,7 @@ export default async function BookPage({
 
           {book.description && (
             <div className="mt-8">
-              <h2 className="text-lg font-semibold">
-                Description
-              </h2>
+              <h2 className="text-lg font-semibold">Description</h2>
 
               <p className="mt-2 leading-relaxed text-gray-600">
                 {book.description}
@@ -136,9 +166,7 @@ export default async function BookPage({
           )}
 
           <div className="mt-8 rounded-xl border p-5">
-            <h2 className="font-semibold">
-              Propriétaire
-            </h2>
+            <h2 className="font-semibold">Propriétaire</h2>
 
             <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -159,9 +187,7 @@ export default async function BookPage({
                 </div>
 
                 <div>
-                  <p className="font-medium">
-                    {book.owner.username}
-                  </p>
+                  <p className="font-medium">{book.owner.username}</p>
 
                   {book.owner.neighborhood && (
                     <p className="text-sm text-gray-500">
@@ -180,10 +206,7 @@ export default async function BookPage({
             </div>
           </div>
 
-          <BorrowButton
-            bookId={book.id}
-            isAvailable={isAvailable}
-          />
+          <BorrowButton bookId={book.id} isAvailable={isAvailable} />
         </div>
       </div>
     </main>
