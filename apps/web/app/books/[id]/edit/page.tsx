@@ -48,8 +48,17 @@ export default function EditBookPage() {
   useEffect(() => {
     async function loadBook() {
       try {
+        const token =
+          localStorage.getItem("token") ??
+          localStorage.getItem("accessToken");
+
         const response = await fetch(
-          `${API_URL}/books/${bookId}`
+          `${API_URL}/books/${bookId}`,
+          {
+            headers: token
+              ? { Authorization: `Bearer ${token}` }
+              : {},
+          }
         );
 
         const data = await response.json();
