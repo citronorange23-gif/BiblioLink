@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { put } from "@Vercel/blob";
+import { put } from "@vercel/blob";
 import crypto from "crypto";
 
 /**
