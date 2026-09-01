@@ -139,7 +139,7 @@ export default function Navbar() {
             onClick={closeMenu}
             className="text-2xl font-bold"
           >
-            Livret
+            Libère tes livres
           </Link>
 
           {/* DESKTOP MENU */}
